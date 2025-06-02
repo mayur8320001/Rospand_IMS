@@ -1,0 +1,421 @@
+﻿@model Rospand_IMS.Models.Vendor
+
+@{
+    ViewData["Title"] = "Edit Vendor";
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>Edit Vendor</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" id="vendorForm">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="BillingAddressId" />
+            <input type="hidden" asp-for="ShippingAddressId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Basic Information Section (Mandatory) -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-label">Vendor Type</label>
+                        <div class="col-md-10">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="VendorType" value="Business" required>
+                                <label class="form-check-label">Business</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="VendorType" value="Individual" required>
+                                <label class="form-check-label">Individual</label>
+                            </div>
+                            <span asp-validation-for="VendorType" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label asp-for="ContactPersonName" class="col-md-2 col-form-label">Contact Person</label>
+                        <div class="col-md-10">
+                            <input asp-for="ContactPersonName" class="form-control" required />
+                            <span asp-validation-for="ContactPersonName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-label">Salutation</label>
+                        <div class="col-md-2">
+                            <select asp-for="Salutation" class="form-control">
+                                <option value="">-- Select Salutation --</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Dr.">Dr.</option>
+                            </select>
+                        </div>
+                        <label asp-for="FirstName" class="col-md-2 col-form-label">First Name</label>
+                        <div class="col-md-3">
+                            <input asp-for="FirstName" class="form-control" required />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <label asp-for="LastName" class="col-md-1 col-form-label">Last Name</label>
+                        <div class="col-md-2">
+                            <input asp-for="LastName" class="form-control" required />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label asp-for="CompanyName" class="col-md-2 col-form-label">Company Name</label>
+                        <div class="col-md-4">
+                            <input asp-for="CompanyName" class="form-control" required />
+                            <span asp-validation-for="CompanyName" class="text-danger"></span>
+                        </div>
+                        <label asp-for="VendorDisplayName" class="col-md-2 col-form-label">Display Name</label>
+                        <div class="col-md-4">
+                            <input asp-for="VendorDisplayName" class="form-control" required />
+                            <span asp-validation-for="VendorDisplayName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label asp-for="VendorEmail" class="col-md-2 col-form-label">Email</label>
+                        <div class="col-md-4">
+                            <input asp-for="VendorEmail" class="form-control" required />
+                            <span asp-validation-for="VendorEmail" class="text-danger"></span>
+                        </div>
+                        <label asp-for="CustomerPhone" class="col-md-2 col-form-label">Phone</label>
+                        <div class="col-md-4">
+                            <input asp-for="CustomerPhone" class="form-control" />
+                            <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label asp-for="WorkPhone" class="col-md-2 col-form-label">Work Phone</label>
+                        <div class="col-md-4">
+                            <input asp-for="WorkPhone" class="form-control" />
+                            <span asp-validation-for="WorkPhone" class="text-danger"></span>
+                        </div>
+                        <label asp-for="Mobile" class="col-md-2 col-form-label">Mobile</label>
+                        <div class="col-md-4">
+                            <input asp-for="Mobile" class="form-control" />
+                            <span asp-validation-for="Mobile" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax and Financial Information Section (Optional) -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5>Tax and Financial Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label asp-for="TaxTypeId" class="col-md-2 col-form-label">Tax Type</label>
+                        <div class="col-md-4">
+                            <select asp-for="TaxTypeId" asp-items="ViewBag.TaxTypeId" class="form-control">
+                                <option value="">-- Select Tax Type --</option>
+                            </select>
+                        </div>
+                        <label asp-for="TRNNumber" class="col-md-2 col-form-label">TRN Number</label>
+                        <div class="col-md-4">
+                            <input asp-for="TRNNumber" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-md-2 col-form-label">Place of Supply</label>
+                        <div class="col-md-4">
+                            <select class="form-control" asp-for="BillingAddress.CountryId" asp-items="ViewBag.CountryId">
+                                <option value="">-- Select Country --</option>
+                            </select>
+                        </div>
+                        <label asp-for="PaymentTermId" class="col-md-2 col-form-label">Payment Terms</label>
+                        <div class="col-md-4">
+                            <select asp-for="PaymentTermId" asp-items="ViewBag.PaymentTermId" class="form-control">
+                                <option value="">-- Select Payment Term --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label asp-for="CurrencyId" class="col-md-2 col-form-label">Currency</label>
+                        <div class="col-md-4">
+                            <select asp-for="CurrencyId" asp-items="ViewBag.CurrencyId" class="form-control">
+                                <option value="">-- Select Currency --</option>
+                            </select>
+                        </div>
+                        <label asp-for="OpeningBalance" class="col-md-2 col-form-label">Opening Balance</label>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input asp-for="OpeningBalance" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Address Section (Optional) - Collapsible -->
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#billingAddressCollapse" aria-expanded="true" aria-controls="billingAddressCollapse">
+                            <i class="fa fa-minus"></i> Billing Address (Optional)
+                        </button>
+                    </h5>
+                </div>
+                <div id="billingAddressCollapse" class="collapse show">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <label asp-for="BillingAddress.Attention" class="col-md-2 col-form-label">Attention</label>
+                            <div class="col-md-4">
+                                <input asp-for="BillingAddress.Attention" class="form-control" />
+                            </div>
+                            <label asp-for="BillingAddress.ContactNo" class="col-md-2 col-form-label">Contact Number</label>
+                            <div class="col-md-4">
+                                <input asp-for="BillingAddress.ContactNo" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Country / Region</label>
+                            <div class="col-md-2">
+                                <select asp-for="BillingAddress.CountryId" asp-items="ViewBag.CountryId" class="form-control country-select">
+                                    <option value="">-- Select Country --</option>
+                                </select>
+                            </div>
+                            <label class="col-md-2 col-form-label">State</label>
+                            <div class="col-md-2">
+                                <select asp-for="BillingAddress.StateId" class="form-control state-select">
+                                    <option value="">-- Select State --</option>
+                                </select>
+                            </div>
+                            <label class="col-md-2 col-form-label">City</label>
+                            <div class="col-md-2">
+                                <select asp-for="BillingAddress.CityId" class="form-control city-select">
+                                    <option value="">-- Select City --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Zip Code</label>
+                            <div class="col-md-4">
+                                <input asp-for="BillingAddress.ZipCode" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Street Address</label>
+                            <div class="col-md-10">
+                                <textarea asp-for="BillingAddress.StreetAddress" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address Section (Optional) - Collapsible -->
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#shippingAddressCollapse" aria-expanded="false" aria-controls="shippingAddressCollapse">
+                            <i class="fa fa-plus"></i> Shipping Address (Optional)
+                        </button>
+                    </h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="ShippingSameAsBilling" id="shippingSameAsBilling">
+                        <label class="form-check-label" for="shippingSameAsBilling">Same as billing address</label>
+                    </div>
+                </div>
+                <div id="shippingAddressCollapse" class="collapse">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <label asp-for="ShippingAddress.Attention" class="col-md-2 col-form-label">Attention</label>
+                            <div class="col-md-4">
+                                <input asp-for="ShippingAddress.Attention" class="form-control" />
+                            </div>
+                            <label asp-for="ShippingAddress.ContactNo" class="col-md-2 col-form-label">Contact Number</label>
+                            <div class="col-md-4">
+                                <input asp-for="ShippingAddress.ContactNo" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Country / Region</label>
+                            <div class="col-md-2">
+                                <select asp-for="ShippingAddress.CountryId" asp-items="ViewBag.CountryId" class="form-control shipping-country-select">
+                                    <option value="">-- Select Country --</option>
+                                </select>
+                            </div>
+                            <label class="col-md-2 col-form-label">State</label>
+                            <div class="col-md-2">
+                                <select asp-for="ShippingAddress.StateId" class="form-control shipping-state-select">
+                                    <option value="">-- Select State --</option>
+                                </select>
+                            </div>
+                            <label class="col-md-2 col-form-label">City</label>
+                            <div class="col-md-2">
+                                <select asp-for="ShippingAddress.CityId" class="form-control shipping-city-select">
+                                    <option value="">-- Select City --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Zip Code</label>
+                            <div class="col-md-4">
+                                <input asp-for="ShippingAddress.ZipCode" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-2 col-form-label">Street Address</label>
+                            <div class="col-md-10">
+                                <textarea asp-for="ShippingAddress.StreetAddress" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-group row">
+                <div class="col-md-12 text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> Update Vendor
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="fa fa-times"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            // Initialize dropdowns with existing values
+            var billingCountryId = '@Model.BillingAddress?.CountryId';
+            var billingStateId = '@Model.BillingAddress?.StateId';
+            var billingCityId = '@Model.BillingAddress?.CityId';
+
+            if (billingCountryId) {
+                loadStates('.country-select', '.state-select', billingCountryId, billingStateId, function () {
+                    if (billingStateId) {
+                        loadCities('.state-select', '.city-select', billingStateId, billingCityId);
+                    }
+                });
+            }
+
+            var shippingCountryId = '@Model.ShippingAddress?.CountryId';
+            var shippingStateId = '@Model.ShippingAddress?.StateId';
+            var shippingCityId = '@Model.ShippingAddress?.CityId';
+
+            if (shippingCountryId && !$('#shippingSameAsBilling').is(':checked')) {
+                loadStates('.shipping-country-select', '.shipping-state-select', shippingCountryId, shippingStateId, function () {
+                    if (shippingStateId) {
+                        loadCities('.shipping-state-select', '.shipping-city-select', shippingStateId, shippingCityId);
+                    }
+                });
+            }
+
+            // Handle shipping same as billing checkbox
+            $('#shippingSameAsBilling').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#shippingAddressCollapse').collapse('hide');
+                } else {
+                    $('#shippingAddressCollapse').collapse('show');
+                }
+            });
+
+            // Toggle plus/minus icon when collapse is shown/hidden
+            $('.collapse').on('show.bs.collapse', function () {
+                $(this).prev('.card-header').find('.fa').removeClass('fa-plus').addClass('fa-minus');
+            }).on('hide.bs.collapse', function () {
+                $(this).prev('.card-header').find('.fa').removeClass('fa-minus').addClass('fa-plus');
+            });
+
+            // Cascade dropdowns for billing address
+            $('.country-select').change(function () {
+                var countryId = $(this).val();
+                $('.state-select').empty().append('<option value="">-- Select State --</option>');
+                $('.city-select').empty().append('<option value="">-- Select City --</option>');
+
+                if (countryId) {
+                    loadStates('.country-select', '.state-select', countryId);
+                }
+            });
+
+            $('.state-select').change(function () {
+                var stateId = $(this).val();
+                $('.city-select').empty().append('<option value="">-- Select City --</option>');
+
+                if (stateId) {
+                    loadCities('.state-select', '.city-select', stateId);
+                }
+            });
+
+            // Cascade dropdowns for shipping address
+            $('.shipping-country-select').change(function () {
+                var countryId = $(this).val();
+                $('.shipping-state-select').empty().append('<option value="">-- Select State --</option>');
+                $('.shipping-city-select').empty().append('<option value="">-- Select City --</option>');
+
+                if (countryId) {
+                    loadStates('.shipping-country-select', '.shipping-state-select', countryId);
+                }
+            });
+
+            $('.shipping-state-select').change(function () {
+                var stateId = $(this).val();
+                $('.shipping-city-select').empty().append('<option value="">-- Select City --</option>');
+
+                if (stateId) {
+                    loadCities('.shipping-state-select', '.shipping-city-select', stateId);
+                }
+            });
+
+            function loadStates(countrySelector, stateSelector, countryId, selectedStateId = null, callback = null) {
+                $.getJSON('/Vendor/GetStatesByCountry', { countryId: countryId }, function (data) {
+                    var $stateSelect = $(stateSelector);
+                    $.each(data, function (index, item) {
+                        $stateSelect.append($('<option></option>').val(item.id).text(item.name));
+                    });
+
+                    if (selectedStateId) {
+                        $stateSelect.val(selectedStateId);
+                    }
+
+                    if (callback) callback();
+                });
+            }
+
+            function loadCities(stateSelector, citySelector, stateId, selectedCityId = null) {
+                $.getJSON('/Vendor/GetCitiesByState', { stateId: stateId }, function (data) {
+                    var $citySelect = $(citySelector);
+                    $.each(data, function (index, item) {
+                        $citySelect.append($('<option></option>').val(item.id).text(item.name));
+                    });
+
+                    if (selectedCityId) {
+                        $citySelect.val(selectedCityId);
+                    }
+                });
+            }
+        });
+    </script>
+}

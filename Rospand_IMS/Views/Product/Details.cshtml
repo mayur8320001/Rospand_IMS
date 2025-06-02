@@ -1,0 +1,124 @@
+﻿@model Rospand_IMS.Models.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<h1>Product Details</h1>
+
+<div>
+    <h4>@Model.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">SKU:</dt>
+        <dd class="col-sm-10">@Model.SKU</dd>
+
+        <dt class="col-sm-2">Type:</dt>
+        <dd class="col-sm-10">@Model.Type</dd>
+
+        <dt class="col-sm-2">Category:</dt>
+        <dd class="col-sm-10">@(Model.Category?.Name ?? "N/A")</dd>
+
+        <dt class="col-sm-2">Description:</dt>
+        <dd class="col-sm-10">@(Model.Description ?? "N/A")</dd>
+
+        @if (Model.Type == ProductType.Goods)
+        {
+            <dt class="col-sm-2">Unit:</dt>
+            <dd class="col-sm-10">@(Model.Unit?.Name ?? "N/A")</dd>
+
+            <dt class="col-sm-2">Cost Category:</dt>
+            <dd class="col-sm-10">@(Model.CostCategory?.Name ?? "N/A")</dd>
+
+            <dt class="col-sm-2">Dimensions:</dt>
+            <dd class="col-sm-10">
+                @if (Model.Length.HasValue || Model.Width.HasValue || Model.Height.HasValue)
+                {
+                    <div class="form-group">
+                        <label>Dimensions</label>
+                        <p class="form-control-static">
+                            @if (Model.Length.HasValue)
+                            {
+                                <span>L: @Model.Length</span>
+                            }
+                            @if (Model.Width.HasValue)
+                            {
+                                <span>W: @Model.Width</span>
+                            }
+                            @if (Model.Height.HasValue)
+                            {
+                                <span>H: @Model.Height</span>
+                            }
+                            @Model.DimensionUnit
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    @:N/A
+                }
+            </dd>
+
+            <dt class="col-sm-2">Weight:</dt>
+            <dd class="col-sm-10">
+                @if (Model.Weight.HasValue)
+                {
+                    @($"{Model.Weight} {Model.WeightUnit}")
+                }
+                else
+                {
+                    @:N/A
+                }
+            </dd>
+
+            <dt class="col-sm-2">Purchase Price:</dt>
+            <dd class="col-sm-10">@(Model.PurchasePrice?.ToString("C") ?? "N/A")</dd>
+
+            <dt class="col-sm-2">Sales Price:</dt>
+            <dd class="col-sm-10">@(Model.SalesPrice?.ToString("C") ?? "N/A")</dd>
+        }
+        else
+        {
+            @if (Model.Type == ProductType.Services && Model.ServiceDuration.HasValue)
+            {
+                <div class="form-group">
+                    <label>Service Duration</label>
+                    <p class="form-control-static">
+                        @Model.ServiceDuration @Model.ServiceDurationUnit
+                    </p>
+                </div>
+            }   }
+
+        @if (Model.IsGroupedProduct && Model.Components.Any())
+        {
+            <dt class="col-sm-2">Components:</dt>
+            <dd class="col-sm-10">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Quantity</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var component in Model.Components)
+                        {
+                            <tr>
+                                <td>@component.ComponentProduct.Name</td>
+                                <td>@component.ComponentProduct.SKU</td>
+                                <td>@component.Quantity</td>
+                                <td>@(component.Notes ?? "N/A")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </dd>
+        }
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Rospand IMS</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Rospand_IMS.styles.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header class="header d-flex justify-content-between align-items-center px-2 py-4 shadow bg-light">
+        <nav class="d-flex align-items-center" aria-label="Main navigation">
+            <a class="nav-link p-0 mx-4 h-30 w-50" asp-area="" asp-controller="Home" asp-action="Index" aria-label="Rospand IMS Home">
+                <img src="@Url.Content("~/images/rlogo.jpg")" alt="Rospand IMS Logo" class="logo-img" />
+            </a>
+            <button class="btn btn-outline-secondary" onclick="toggleSidebar()" aria-label="Toggle sidebar">☰</button>
+        </nav>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <nav class="navbar navbar-light" aria-label="Sidebar navigation">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="masterPagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cubes me-2"></i>Master Pages
+                        </a>
+                        <ul class="dropdown-menu w-100" aria-labelledby="masterPagesDropdown">
+                            <li><a class="dropdown-item" asp-controller="Category" asp-action="Index"><i class="fas fa-tags me-2"></i>Category Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="Product" asp-action="Index"><i class="fas fa-boxes me-2"></i>Product Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="Units" asp-action="Index"><i class="fas fa-balance-scale me-2"></i>Unit Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="PaymentTerms" asp-action="Index"><i class="fas fa-file-invoice-dollar me-2"></i>Payment Terms</a></li>
+                            <li><a class="dropdown-item" asp-controller="Tax" asp-action="Index"><i class="fas fa-receipt me-2"></i>Tax Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="Country" asp-action="Index"><i class="fas fa-globe me-2"></i>Countries</a></li>
+                            <li><a class="dropdown-item" asp-controller="State" asp-action="Index"><i class="fas fa-map me-2"></i>States</a></li>
+                            <li><a class="dropdown-item" asp-controller="City" asp-action="Index"><i class="fas fa-city me-2"></i>Cities</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="operationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Stock 
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="operationDropdown">
+                            <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Index">Stock OverView</a></li>
+                            <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Adjust">Adjust Stock</a></li>
+                            <li><a class="dropdown-item" asp-controller="Inventory" asp-action="LowStock">Low Stock Alert</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="operationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart me-2"></i>Sales
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="operationDropdown">
+                            <li><a class="dropdown-item" asp-controller="Customer" asp-action="Index"><i class="fas fa-users me-2"></i>Customer Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="Index">Sale Order</a></li>
+                          
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="purchaseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-basket me-2"></i>Purchase
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="purchaseDropdown">
+                            <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Index"><i class="fas fa-truck me-2"></i>Vendor Master</a></li>
+                            <li><a class="dropdown-item" asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-truck me-2"></i>Purchase Order</a></li>
+                            <li>
+                                <a asp-action="ReceiveOrder" asp-controller="PurchaseOrder" class="dropdown-item">
+                                Go to Receive Order
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-users-cog me-2"></i>User Management
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userManagementDropdown">
+                            <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageUsers"><i class="fas fa-user-edit me-2"></i>Manage Users</a></li>
+                            <li><a class="dropdown-item" asp-controller="Admin" asp-action="ManageRoles"><i class="fas fa-user-shield me-2"></i>Manage Roles</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportDropdown">
+                            <li><a class="dropdown-item" asp-controller="Report" asp-action="Summary"><i class="fas fa-chart-pie me-2"></i>Summary Report</a></li>
+                            <li><a class="dropdown-item" asp-controller="Report" asp-action="Detailed"><i class="fas fa-chart-line me-2"></i>Detailed Report</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="marketingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bullhorn me-2"></i>Marketing
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="marketingDropdown">
+                            <li><a class="dropdown-item" asp-controller="Marketing" asp-action="Campaigns"><i class="fas fa-ad me-2"></i>Campaigns</a></li>
+                            <li><a class="dropdown-item" asp-controller="Marketing" asp-action="Analytics"><i class="fas fa-chart-area me-2"></i>Analytics</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content px-5" id="main-content">
+        <div class="content-wrapper">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.datatables.net/v/bs4/dt-1.11.5/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/datatable-init.js" asp-append-version="true"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,128 @@
+﻿@model ReceiveOrderViewModel
+
+@{
+    ViewData["Title"] = "Receive Order";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<form asp-action="ReceiveOrder" method="post" id="receiveForm">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="VendorId" class="control-label">Vendor</label>
+                <select asp-for="VendorId" asp-items="Model.Vendors" class="form-control" id="vendorSelect">
+                    <option value="">-- Select Vendor --</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="PurchaseOrderId" class="control-label">Purchase Order</label>
+                <select asp-for="PurchaseOrderId" class="form-control" id="poSelect" disabled>
+                    <option value="">-- Select PO --</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="poItemsContainer">
+        <!-- PO items will be loaded here via AJAX -->
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Receive Items</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#vendorSelect').change(function () {
+                var vendorId = $(this).val();
+                if (vendorId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPurchaseOrders", "PurchaseOrder")',
+                        type: 'POST',
+                        data: { vendorId: vendorId },
+                        success: function (data) {
+                            $('#poSelect').empty().append('<option value="">-- Select PO --</option>');
+                            $.each(data, function (index, item) {
+                                $('#poSelect').append($('<option></option>').val(item.value).text(item.text));
+                            });
+                            $('#poSelect').prop('disabled', false);
+                            $('#poItemsContainer').empty();
+                            $('#submitBtn').prop('disabled', true);
+                        }
+                    });
+                } else {
+                    $('#poSelect').empty().append('<option value="">-- Select PO --</option>').prop('disabled', true);
+                    $('#poItemsContainer').empty();
+                    $('#submitBtn').prop('disabled', true);
+                }
+            });
+
+            $('#poSelect').change(function () {
+                var poId = $(this).val();
+                if (poId) {
+                    $.ajax({
+                        url: '@Url.Action("LoadPurchaseOrder", "PurchaseOrder")',
+                        type: 'POST',
+                        data: { purchaseOrderId: poId },
+                        success: function (data) {
+                            $('#poItemsContainer').html(data);
+                            $('#submitBtn').prop('disabled', false);
+                        }
+                    });
+                } else {
+                    $('#poItemsContainer').empty();
+                    $('#submitBtn').prop('disabled', true);
+                }
+            });
+        });
+        // Validate receive quantities before submission
+        $('#receiveForm').submit(function (e) {
+            var valid = true;
+            $('.receive-qty').each(function () {
+                var max = parseInt($(this).attr('max'));
+                var val = parseInt($(this).val()) || 0;
+                if (val > max) {
+                    alert('Received quantity cannot exceed remaining quantity');
+                    valid = false;
+                    return false;
+                }
+                if (val < 0) {
+                    alert('Received quantity cannot be negative');
+                    valid = false;
+                    return false;
+                }
+            });
+
+            if (!valid) {
+                e.preventDefault();
+            }
+
+            // Ensure at least one item has quantity > 0
+            var anyReceived = false;
+            $('.receive-qty').each(function () {
+                if (parseInt($(this).val()) > 0) {
+                    anyReceived = true;
+                    return false; // break loop
+                }
+            });
+
+            if (!anyReceived) {
+                alert('Please enter quantities for at least one item');
+                e.preventDefault();
+            }
+        });
+    </script>
+}

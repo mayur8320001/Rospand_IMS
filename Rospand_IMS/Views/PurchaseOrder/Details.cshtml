@@ -1,0 +1,215 @@
+﻿@model Rospand_IMS.Models.PurchaseOrder
+
+@{
+    ViewData["Title"] = "Purchase Order Details";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>@ViewData["Title"] - @Model.PONumber</h4>
+        <div>
+            <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-secondary mr-2" target="_blank">Print</a>
+            @if (Model.Status == PurchaseOrderStatus.Draft)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning mr-2">Edit</a>
+                <form asp-action="Submit" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary mr-2">Submit</button>
+                </form>
+            }
+            @if (Model.Status == PurchaseOrderStatus.Submitted)
+            {
+                <form asp-action="Approve" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success mr-2">Approve</button>
+                </form>
+            }
+            @if (Model.Status == PurchaseOrderStatus.Approved)
+            {
+                <form asp-action="Order" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-info mr-2">Mark as Ordered</button>
+                </form>
+            }
+            @if (Model.Status != PurchaseOrderStatus.Received && Model.Status != PurchaseOrderStatus.Cancelled)
+            {
+                <form asp-action="Cancel" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Cancel</button>
+                </form>
+            }
+        </div>
+    </div>
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Order Information</h5>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">PO Number:</dt>
+                    <dd class="col-sm-8">@Model.PONumber</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @GetStatusBadgeClass(Model.Status)">
+                            @Model.Status
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Order Date:</dt>
+                    <dd class="col-sm-8">@Model.OrderDate.ToString("d")</dd>
+
+                    <dt class="col-sm-4">Expected Delivery:</dt>
+                    <dd class="col-sm-8">@Model.ExpectedDeliveryDate.ToString("d")</dd>
+
+                    <dt class="col-sm-4">Currency:</dt>
+                    <dd class="col-sm-8">@Model.Currency.Code</dd>
+
+                    <dt class="col-sm-4">Notes:</dt>
+                    <dd class="col-sm-8">@Model.Notes</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h5>Vendor Information</h5>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Vendor:</dt>
+                    <dd class="col-sm-8">@Model.Vendor.CompanyName</dd>
+
+                    <dt class="col-sm-4">Contact:</dt>
+                    <dd class="col-sm-8">@Model.Vendor.ContactPersonName</dd>
+
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">@Model.Vendor.VendorEmail</dd>
+
+                    <dt class="col-sm-4">Phone:</dt>
+                    <dd class="col-sm-8">@Model.Vendor.CustomerPhone</dd>
+                </dl>
+            </div>
+        </div>
+
+        <h5>Order Items</h5>
+        <hr />
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Discount %</th>
+                    <th>Tax Rate %</th>
+                    <th>Line Total</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var lineSubtotal = item.Quantity * item.UnitPrice * (1 - item.DiscountPercent / 100);
+                    var lineTotal = lineSubtotal * (1 + item.TaxRate / 100);
+
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("C")</td>
+                        <td>@item.DiscountPercent.ToString("0.##")%</td>
+                        <td>@item.TaxRate.ToString("0.##")%</td>
+                        <td>@lineTotal.ToString("C")</td>
+                        <td>@item.Notes</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
+                    <td>@Model.SubTotal.ToString("C")</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-right"><strong>Tax:</strong></td>
+                    <td>@Model.TaxAmount.ToString("C")</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-right"><strong>Total:</strong></td>
+                    <td>@Model.TotalAmount.ToString("C")</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5>Audit Information</h5>
+                <hr />
+                <dl class="row">
+                    @if (Model.CreatedDate != default)
+                    {
+                        <dt class="col-sm-4">Created:</dt>
+                        <dd class="col-sm-8">@Model.CreatedDate.ToString("g") by @Model.CreatedBy</dd>
+                    }
+                    @if (Model.ModifiedDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Modified:</dt>
+                        <dd class="col-sm-8">@Model.ModifiedDate.Value.ToString("g") by @Model.ModifiedBy</dd>
+                    }
+                    @if (Model.SubmittedDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Submitted:</dt>
+                        <dd class="col-sm-8">@Model.SubmittedDate.Value.ToString("g") by @Model.SubmittedBy</dd>
+                    }
+                    @if (Model.ApprovedDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Approved:</dt>
+                        <dd class="col-sm-8">@Model.ApprovedDate.Value.ToString("g") by @Model.ApprovedBy</dd>
+                    }
+                    @if (Model.OrderedDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Ordered:</dt>
+                        <dd class="col-sm-8">@Model.OrderedDate.Value.ToString("g") by @Model.OrderedBy</dd>
+                    }
+                    @if (Model.CancelledDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Cancelled:</dt>
+                        <dd class="col-sm-8">@Model.CancelledDate.Value.ToString("g") by @Model.CancelledBy</dd>
+                        <dt class="col-sm-4">Reason:</dt>
+                        <dd class="col-sm-8">@Model.CancellationReason</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadgeClass(PurchaseOrderStatus status)
+    {
+        return status switch
+        {
+            PurchaseOrderStatus.Draft => "badge-secondary",
+            PurchaseOrderStatus.Submitted => "badge-primary",
+            PurchaseOrderStatus.Approved => "badge-info",
+            PurchaseOrderStatus.Ordered => "badge-warning",
+            PurchaseOrderStatus.PartiallyReceived => "badge-warning",
+            PurchaseOrderStatus.Received => "badge-success",
+            PurchaseOrderStatus.Cancelled => "badge-danger",
+            _ => "badge-secondary",
+        };
+    }
+}

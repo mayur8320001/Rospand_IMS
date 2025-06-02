@@ -1,0 +1,112 @@
+﻿@model Rospand_IMS.Models.Customer
+
+@{
+    ViewData["Title"] = "Customer Details";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Customer Details</h6>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">Edit</a>
+            <a asp-action="Index" class="btn btn-secondary btn-sm">Back to List</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Basic Information</h5>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Display Name</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.CustomerDisplayName)</dd>
+
+                    <dt class="col-sm-4">Customer Type</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.CustomerType)</dd>
+
+                    @if (Model.CustomerType == "Business")
+                    {
+                        <dt class="col-sm-4">Company Name</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.CompanyName)</dd>
+
+                        <dt class="col-sm-4">Contact Person</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.ContactPersonName)</dd>
+                    }
+                    else
+                    {
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Model.Salutation @Html.DisplayFor(model => model.FirstName) @Html.DisplayFor(model => model.LastName)</dd>
+                    }
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.CustomerEmail)</dd>
+
+                    <dt class="col-sm-4">Work Phone</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.WorkPhone)</dd>
+
+                    <dt class="col-sm-4">Mobile</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Mobile)</dd>
+                </dl>
+
+                <h5 class="mt-4">Financial Information</h5>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Currency</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.Currency.Name)</dd>
+
+                    <dt class="col-sm-4">Payment Terms</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.PaymentTerm.Name)</dd>
+
+                    <dt class="col-sm-4">Opening Balance</dt>
+                    <dd class="col-sm-8">@Model.OpeningBalance.ToString("C")</dd>
+
+                    <dt class="col-sm-4">Tax Type</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.TaxType.Name)</dd>
+
+                    <dt class="col-sm-4">TRN Number</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(model => model.TRNNumber)</dd>
+                </dl>
+            </div>
+
+            <div class="col-md-6">
+                <h5>Billing Address</h5>
+                <hr />
+                @if (Model.BillingAddress != null)
+                {
+                    <address>
+                        <strong>@Model.BillingAddress.Attention</strong><br />
+                        @Model.BillingAddress.StreetAddress<br />
+                        @Model.BillingAddress.City?.Name, @Model.BillingAddress.State?.Name<br />
+                        @Model.BillingAddress.Country?.Name, @Model.BillingAddress.ZipCode<br />
+                        <abbr title="Phone">P:</abbr> @Model.BillingAddress.ContactNo
+                    </address>
+                }
+                else
+                {
+                    <p>No billing address specified</p>
+                }
+
+                <h5 class="mt-4">Shipping Address</h5>
+                <hr />
+                @if (Model.ShippingSameAsBilling)
+                {
+                    <p>Same as billing address</p>
+                }
+                else if (Model.ShippingAddress != null)
+                {
+                    <address>
+                        <strong>@Model.ShippingAddress.Attention</strong><br />
+                        @Model.ShippingAddress.StreetAddress<br />
+                        @Model.ShippingAddress.City?.Name, @Model.ShippingAddress.State?.Name<br />
+                        @Model.ShippingAddress.Country?.Name, @Model.ShippingAddress.ZipCode<br />
+                        <abbr title="Phone">P:</abbr> @Model.ShippingAddress.ContactNo
+                    </address>
+                }
+                else
+                {
+                    <p>No shipping address specified</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,107 @@
+﻿@model Rospand_IMS.Models.GoodsReceiptCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Goods Receipt";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4>@ViewData["Title"]</h4>
+        <h6>PO: @Model.PONumber - Vendor: @Model.VendorName</h6>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <input type="hidden" asp-for="PurchaseOrderId" />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="GRNumber" class="control-label"></label>
+                        <input asp-for="GRNumber" class="form-control" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ReceiptDate" class="control-label"></label>
+                        <input asp-for="ReceiptDate" type="date" class="form-control" />
+                        <span asp-validation-for="ReceiptDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="WarehouseId" class="control-label"></label>
+                        <select asp-for="WarehouseId" class="form-control" asp-items="@(new SelectList(Model.Warehouses, "Id", "Name"))">
+                            <option value="">-- Select Warehouse --</option>
+                        </select>
+                        <span asp-validation-for="WarehouseId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Notes" class="control-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+            <h5>Received Items</h5>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Ordered Qty</th>
+                        <th>Pending Qty</th>
+                        <th>Received Qty</th>
+                        <th>Batch Number</th>
+                        <th>Expiry Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Items.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                @Model.Items[i].ProductName
+                                <input type="hidden" asp-for="@Model.Items[i].PurchaseOrderItemId" />
+                                <input type="hidden" asp-for="@Model.Items[i].ProductId" />
+                            </td>
+                            <td>@Model.Items[i].OrderedQuantity</td>
+                            <td>@Model.Items[i].ReceivedQuantity</td>
+                            <td>
+                                <input asp-for="@Model.Items[i].QuantityReceived" class="form-control"
+                                       min="1" max="@Model.Items[i].ReceivedQuantity" />
+                                <span asp-validation-for="@Model.Items[i].QuantityReceived" class="text-danger"></span>
+                            </td>
+                            <td>
+                                <input asp-for="@Model.Items[i].BatchNumber" class="form-control" />
+                                <span asp-validation-for="@Model.Items[i].BatchNumber" class="text-danger"></span>
+                            </td>
+                            <td>
+                                <input asp-for="@Model.Items[i].ExpiryDate" type="date" class="form-control" />
+                                <span asp-validation-for="@Model.Items[i].ExpiryDate" class="text-danger"></span>
+                            </td>
+                            <td>
+                                <input asp-for="@Model.Items[i].Notes" class="form-control" />
+                                <span asp-validation-for="@Model.Items[i].Notes" class="text-danger"></span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Receive Goods" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

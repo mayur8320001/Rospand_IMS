@@ -1,0 +1,74 @@
+﻿@model ConfirmSalesOrderViewModel
+
+<h2>Stock Issues for Sales Order @Model.SONumber</h2>
+<h4>Customer: @Model.CustomerName</h4>
+
+@if (Model.OutOfStockItems.Any())
+{
+    <div class="alert alert-danger">
+        <h4>Out of Stock Items</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Ordered</th>
+                    <th>Available</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OutOfStockItems)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Available</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.InsufficientStockItems.Any())
+{
+    <div class="alert alert-warning">
+        <h4>Insufficient Stock Items</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Ordered</th>
+                    <th>Available</th>
+                    <th>Needed</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.InsufficientStockItems)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Available</td>
+                        <td>@(item.Quantity - item.Available)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div class="form-group">
+    <form asp-action="Confirm" method="post">
+        <input type="hidden" name="id" value="@Model.SalesOrderId" />
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="createPurchaseForMissingItems" id="createPurchase" value="true" checked>
+            <label class="form-check-label" for="createPurchase">
+                Create purchase order for missing items
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Continue</button>
+        <a asp-action="Details" asp-route-id="@Model.SalesOrderId" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

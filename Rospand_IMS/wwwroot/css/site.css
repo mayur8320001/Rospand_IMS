@@ -1,0 +1,342 @@
+:root {
+    --sidebar-width: 250px;
+    --header-height: 70px;
+    --primary-color: #4e73df;
+    --secondary-color: #f8f9fc;
+    --accent-color: #2e59d9;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #f8f9fc;
+    overflow-x: hidden;
+}
+
+.header {
+    height: var(--header-height);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.logo-img {
+    height: 40px;
+    transition: all 0.3s;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    background: white;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: all 0.3s;
+    overflow-y: auto;
+    z-index: 1020;
+}
+
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--header-height);
+    padding: 20px;
+    transition: all 0.3s;
+    min-height: calc(100vh - var(--header-height));
+}
+
+    .main-content.expanded {
+        margin-left: 0;
+    }
+
+.nav-link {
+    color: #5a5c69;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    border-left: 3px solid transparent;
+}
+
+    .nav-link:hover, .nav-link:focus {
+        color: var(--primary-color);
+        background-color: var(--secondary-color);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .nav-link.active {
+        color: var(--primary-color);
+        background-color: var(--secondary-color);
+        border-left: 3px solid var(--primary-color);
+    }
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-radius: 0.35rem;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1.5rem;
+    color: #5a5c69;
+}
+
+    .dropdown-item:hover {
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
+    }
+
+.dropdown-toggle::after {
+    transition: transform 0.3s;
+}
+
+.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+/* Nested dropdown styles */
+.dropdown-menu .dropdown-menu {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+/* Submenu styling */
+.collapse {
+    padding-left: 1.5rem;
+}
+
+.list-unstyled li {
+    margin: 0.25rem 0;
+}
+
+.list-unstyled a {
+    padding: 0.5rem 1rem;
+    display: block;
+    color: #5a5c69;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+    .list-unstyled a:hover {
+        color: var(--primary-color);
+        background-color: var(--secondary-color);
+    }
+
+/* Responsive adjustments */
+@@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+        .sidebar.collapsed {
+            transform: translateX(0);
+        }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu-content {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-top: -0.5rem;
+    min-width: 100%;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    background-color: #fff;
+    z-index: 1000;
+}
+
+.dropdown-submenu:hover .dropdown-submenu-content {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.dropdown-submenu .dropdown-toggle .fa-chevron-right {
+    transition: transform 0.3s ease;
+}
+
+.dropdown-submenu:hover .dropdown-toggle .fa-chevron-right {
+    transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Adjust the main dropdown to accommodate the submenu */
+.dropdown-menu {
+    overflow: visible;
+}
+
+.dropdown-item {
+    white-space: nowrap;
+}
+
+
+/*   dashboard css*/
+/* Dashboard specific styles */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: all 0.3s;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+    }
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e3e6f0;
+    font-weight: 600;
+    padding: 1rem 1.35rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid #e3e6f0;
+    padding: 0.75rem 1.25rem;
+}
+
+/* Summary card colors */
+.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.bg-success {
+    background-color: #198754 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Table styles */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Badge styles */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    border-radius: 0.25rem;
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+/*   dashboard css*/
+
+/* Purchase Order Styles */
+.po-card {
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+    margin-bottom: 1.5rem;
+}
+
+.po-header {
+    padding: 1rem 1.35rem;
+    border-bottom: 1px solid #e3e6f0;
+    background-color: #f8f9fc;
+}
+
+.po-body {
+    padding: 1.35rem;
+}
+
+.po-footer {
+    padding: 1rem 1.35rem;
+    border-top: 1px solid #e3e6f0;
+    background-color: #f8f9fc;
+}
+
+/* Status badges */
+.badge-draft {
+    background-color: #6c757d;
+    color: white;
+}
+
+.badge-ordered {
+    background-color: #007bff;
+    color: white;
+}
+
+.badge-received {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Table styling */
+.table-po-items th {
+    background-color: #f8f9fa;
+    white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .po-card {
+        margin-bottom: 1rem;
+    }
+
+    .po-header, .po-body, .po-footer {
+        padding: 0.75rem;
+    }
+}
+/* purchase order css*/

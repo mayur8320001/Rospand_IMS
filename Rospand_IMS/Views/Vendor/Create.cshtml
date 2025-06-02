@@ -1,0 +1,268 @@
+﻿@model Rospand_IMS.Models.VendorCreateViewModel
+
+@{
+    ViewData["Title"] = "Create New Vendor";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Basic Information</h5>
+                    <hr />
+
+                    <div class="form-group">
+                        <label asp-for="VendorType" class="control-label"></label>
+                        <select asp-for="VendorType" class="form-control">
+                            <option value="Business">Business</option>
+                            <option value="Individual">Individual</option>
+                        </select>
+                        <span asp-validation-for="VendorType" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ContactPersonName" class="control-label"></label>
+                        <input asp-for="ContactPersonName" class="form-control" />
+                        <span asp-validation-for="ContactPersonName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Salutation" class="control-label"></label>
+                        <input asp-for="Salutation" class="form-control" />
+                        <span asp-validation-for="Salutation" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FirstName" class="control-label"></label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LastName" class="control-label"></label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CompanyName" class="control-label"></label>
+                        <input asp-for="CompanyName" class="form-control" />
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="VendorDisplayName" class="control-label"></label>
+                        <input asp-for="VendorDisplayName" class="form-control" />
+                        <span asp-validation-for="VendorDisplayName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h5>Contact Information</h5>
+                    <hr />
+
+                    <div class="form-group">
+                        <label asp-for="VendorEmail" class="control-label"></label>
+                        <input asp-for="VendorEmail" class="form-control" />
+                        <span asp-validation-for="VendorEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CustomerPhone" class="control-label"></label>
+                        <input asp-for="CustomerPhone" class="form-control" />
+                        <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="WorkPhone" class="control-label"></label>
+                        <input asp-for="WorkPhone" class="form-control" />
+                        <span asp-validation-for="WorkPhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Mobile" class="control-label"></label>
+                        <input asp-for="Mobile" class="form-control" />
+                        <span asp-validation-for="Mobile" class="text-danger"></span>
+                    </div>
+
+                    <h5 class="mt-4">Financial Information</h5>
+                    <hr />
+
+                    <div class="form-group">
+                        <label asp-for="TaxTypeId" class="control-label"></label>
+                        <select asp-for="TaxTypeId" class="form-control" asp-items="ViewBag.TaxTypeId">
+                            <option value="">-- Select Tax Type --</option>
+                        </select>
+                        <span asp-validation-for="TaxTypeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="TRNNumber" class="control-label"></label>
+                        <input asp-for="TRNNumber" class="form-control" />
+                        <span asp-validation-for="TRNNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PaymentTermId" class="control-label"></label>
+                        <select asp-for="PaymentTermId" class="form-control" asp-items="ViewBag.PaymentTermId">
+                            <option value="">-- Select Payment Term --</option>
+                        </select>
+                        <span asp-validation-for="PaymentTermId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CurrencyId" class="control-label"></label>
+                        <select asp-for="CurrencyId" class="form-control" asp-items="ViewBag.CurrencyId">
+                            <option value="">-- Select Currency --</option>
+                        </select>
+                        <span asp-validation-for="CurrencyId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="OpeningBalance" class="control-label"></label>
+                        <input asp-for="OpeningBalance" class="form-control" />
+                        <span asp-validation-for="OpeningBalance" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Billing Address</h5>
+                    <hr />
+
+                    <partial name="_AddressForm" for="BillingAddress" />
+                </div>
+
+                <div class="col-md-6">
+                    <h5>Shipping Address</h5>
+                    <hr />
+
+                    <div class="form-group form-check">
+                        <input class="form-check-input" asp-for="ShippingSameAsBilling" />
+                        <label class="form-check-label" asp-for="ShippingSameAsBilling"></label>
+                    </div>
+
+                    <div id="shippingAddressSection" style="@(Model.ShippingSameAsBilling ? "display:none;" : "")">
+                        <partial name="_AddressForm" for="ShippingAddress" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            // Toggle shipping address visibility
+            $('#ShippingSameAsBilling').change(function () {
+                if (this.checked) {
+                    $('#shippingAddressSection').hide();
+                } else {
+                    $('#shippingAddressSection').show();
+                }
+            });
+
+            // Billing Address Cascading Dropdowns - CORRECTED
+            $('#BillingAddress_CountryId').change(function () {
+                var countryId = $(this).val();
+                if (!countryId) return;
+
+                $.getJSON('/Vendor/GetStatesByCountry', { countryId: countryId }, function (data) {
+                    var items = '<option value="">-- Select State --</option>';
+                    $.each(data, function (i, state) {
+                        items += '<option value="' + state.id + '">' + state.name + '</option>';
+                    });
+                    $('#BillingAddress_StateId').html(items);
+                    $('#BillingAddress_CityId').html('<option value="">-- Select City --</option>');
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to load states: ", textStatus, errorThrown);
+                });
+            });
+
+            $('#BillingAddress_StateId').change(function () {
+                var stateId = $(this).val();
+                if (!stateId) return;
+
+                $.getJSON('/Vendor/GetCitiesByState', { stateId: stateId }, function (data) {
+                    var items = '<option value="">-- Select City --</option>';
+                    $.each(data, function (i, city) {
+                        items += '<option value="' + city.id + '">' + city.name + '</option>';
+                    });
+                    $('#BillingAddress_CityId').html(items);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to load cities: ", textStatus, errorThrown);
+                });
+            });
+
+            // Shipping Address Cascading Dropdowns - CORRECTED
+            $('#ShippingAddress_CountryId').change(function () {
+                var countryId = $(this).val();
+                if (!countryId) return;
+
+                $.getJSON('/Vendor/GetStatesByCountry', { countryId: countryId }, function (data) {
+                    var items = '<option value="">-- Select State --</option>';
+                    $.each(data, function (i, state) {
+                        items += '<option value="' + state.id + '">' + state.name + '</option>';
+                    });
+                    $('#ShippingAddress_StateId').html(items);
+                    $('#ShippingAddress_CityId').html('<option value="">-- Select City --</option>');
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to load states: ", textStatus, errorThrown);
+                });
+            });
+
+            $('#ShippingAddress_StateId').change(function () {
+                var stateId = $(this).val();
+                if (!stateId) return;
+
+                $.getJSON('/Vendor/GetCitiesByState', { stateId: stateId }, function (data) {
+                    var items = '<option value="">-- Select City --</option>';
+                    $.each(data, function (i, city) {
+                        items += '<option value="' + city.id + '">' + city.name + '</option>';
+                    });
+                    $('#ShippingAddress_CityId').html(items);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to load cities: ", textStatus, errorThrown);
+                });
+            });
+            // If shipping same as billing is checked, copy billing to shipping when billing changes
+            $('#BillingAddress_CountryId, #BillingAddress_StateId, #BillingAddress_CityId').change(function () {
+                if ($('#ShippingSameAsBilling').is(':checked')) {
+                    $('#ShippingAddress_CountryId').val($('#BillingAddress_CountryId').val()).trigger('change');
+                    // Need to delay state and city to allow for AJAX to complete
+                    setTimeout(function () {
+                        $('#ShippingAddress_StateId').val($('#BillingAddress_StateId').val()).trigger('change');
+                        setTimeout(function () {
+                            $('#ShippingAddress_CityId').val($('#BillingAddress_CityId').val());
+                        }, 500);
+                    }, 500);
+                }
+            });
+
+            // Copy other billing address fields if "same as billing" is checked
+            $('input[id^="BillingAddress_"], textarea[id^="BillingAddress_"]').on('input', function () {
+                if ($('#ShippingSameAsBilling').is(':checked')) {
+                    var fieldName = $(this).attr('id').replace('BillingAddress_', 'ShippingAddress_');
+                    $('#' + fieldName).val($(this).val());
+                }
+            });
+        });
+    </script>
+}

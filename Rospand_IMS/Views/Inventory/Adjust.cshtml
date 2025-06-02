@@ -1,0 +1,101 @@
+﻿@model Rospand_IMS.Models.InventoryAdjustmentViewModel
+
+@{
+    ViewData["Title"] = "Adjust Inventory";
+}
+
+<div class="container">
+    <h1>Adjust Inventory</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Adjust" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group row">
+                    <label asp-for="ProductId" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <select asp-for="ProductId" class="form-control" asp-items="ViewBag.Products">
+                            <option value="">-- Select Product --</option>
+                        </select>
+                        <span asp-validation-for="ProductId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="WarehouseId" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <select asp-for="WarehouseId" class="form-control" asp-items="ViewBag.Warehouses">
+                            <option value="">-- Select Warehouse --</option>
+                        </select>
+                        <span asp-validation-for="WarehouseId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="AdjustmentType" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <select asp-for="AdjustmentType" class="form-control">
+                            <option value="1">Increase Inventory</option>
+                            <option value="-1">Decrease Inventory</option>
+                        </select>
+                        <span asp-validation-for="AdjustmentType" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Quantity" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <input asp-for="Quantity" class="form-control" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Reason" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <select asp-for="Reason" class="form-control">
+                            <option value="Damage">Damage</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Miscount">Miscount</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Notes" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-10">
+                        <textarea asp-for="Notes" class="form-control"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-sm-10 offset-sm-2">
+                        <button type="submit" class="btn btn-primary">Process Adjustment</button>
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('#ProductId').change(function () {
+                var productId = $(this).val();
+                if (productId) {
+                    // You could load current inventory levels here via AJAX
+                }
+            });
+        });
+    </script>
+}

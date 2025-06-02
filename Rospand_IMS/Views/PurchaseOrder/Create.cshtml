@@ -1,0 +1,391 @@
+﻿@model Rospand_IMS.Models.PurchaseOrderCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Purchase Order";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" id="poForm" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="PONumber" class="control-label"></label>
+                        <input asp-for="PONumber" class="form-control" readonly />
+                        <span asp-validation-for="PONumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="OrderDate" class="control-label"></label>
+                        <input asp-for="OrderDate" class="form-control" type="date" />
+                        <span asp-validation-for="OrderDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ExpectedDeliveryDate" class="control-label"></label>
+                        <input asp-for="ExpectedDeliveryDate" class="form-control" type="date" />
+                        <span asp-validation-for="ExpectedDeliveryDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="VendorId" class="control-label"></label>
+                        <select asp-for="VendorId" class="form-control" asp-items="@(new SelectList(Model.Vendors, "Id", "CompanyName"))">
+                            <option value="">-- Select Vendor --</option>
+                        </select>
+                        <span asp-validation-for="VendorId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CurrencyId" class="control-label"></label>
+                        <select asp-for="CurrencyId" class="form-control" asp-items="@(new SelectList(Model.Currencies, "Id", "Code"))">
+                            <option value="">-- Select Currency --</option>
+                        </select>
+                        <span asp-validation-for="CurrencyId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+
+            <h5 class="mt-4">Order Items</h5>
+            <hr />
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Filter by Category:</label>
+                    <select id="categoryFilter" class="form-control">
+                        <option value="">-- All Categories --</option>
+                        @foreach (var category in Model.Products.Select(p => p.Category).Where(c => c != null).Distinct().OrderBy(c => c.Name))
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div id="orderItems">
+                <table class="table table-bordered" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Discount %</th>
+                            <th>Tax Rate %</th>
+                            <th>Total</th>
+                            <th>Notes</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items != null && Model.Items.Count > 0)
+                        {
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <select asp-for="@Model.Items[i].ProductId" class="form-control product-select"
+                                                asp-items="@(new SelectList(Model.Products, "Id", "Name", Model.Items[i].ProductId))">
+                                            <option value="">-- Select Product --</option>
+                                        </select>
+                                        <span asp-validation-for="@Model.Items[i].ProductId" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="@Model.Items[i].Quantity" class="form-control quantity" type="number" min="1" />
+                                        <span asp-validation-for="@Model.Items[i].Quantity" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="@Model.Items[i].UnitPrice" class="form-control unit-price" type="number" min="0" step="0.01" />
+                                        <span asp-validation-for="@Model.Items[i].UnitPrice" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="@Model.Items[i].DiscountPercent" class="form-control discount" type="number" min="0" max="100" />
+                                        <span asp-validation-for="@Model.Items[i].DiscountPercent" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input asp-for="@Model.Items[i].TaxRate" class="form-control tax" type="number" min="0" max="100" />
+                                        <span asp-validation-for="@Model.Items[i].TaxRate" class="text-danger"></span>
+                                    </td>
+                                    <td class="item-total">
+                                        @{
+                                            var lineSubtotal = Model.Items[i].Quantity * Model.Items[i].UnitPrice * (1 - Model.Items[i].DiscountPercent / 100);
+                                            var lineTotal = lineSubtotal * (1 + Model.Items[i].TaxRate / 100);
+                                        }
+                                        @lineTotal.ToString("C")
+                                    </td>
+                                    <td>
+                                        <input asp-for="@Model.Items[i].Notes" class="form-control" />
+                                        <span asp-validation-for="@Model.Items[i].Notes" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td>
+                                    <select name="Items[0].ProductId" class="form-control product-select"
+                                            data-val="true" data-val-required="The Product field is required.">
+                                        <option value="">-- Select Product --</option>
+                                        @foreach (var product in Model.Products)
+                                        {
+                                            <option value="@product.Id">@product.Name</option>
+                                        }
+                                    </select>
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].ProductId" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <input name="Items[0].Quantity" class="form-control quantity" type="number" min="1"
+                                           data-val="true" data-val-required="The Quantity field is required."
+                                           data-val-range="The field Quantity must be between 1 and 2147483647."
+                                           data-val-range-min="1" data-val-range-max="2147483647" />
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].Quantity" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <input name="Items[0].UnitPrice" class="form-control unit-price" type="number" min="0" step="0.01"
+                                           data-val="true" data-val-required="The Unit Price field is required."
+                                           data-val-range="The field Unit Price must be between 0 and 1.7976931348623157E+308."
+                                           data-val-range-min="0" data-val-range-max="1.7976931348623157E+308" />
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].UnitPrice" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <input name="Items[0].DiscountPercent" class="form-control discount" type="number" min="0" max="100"
+                                           data-val="true" data-val-range="The field Discount Percent must be between 0 and 100."
+                                           data-val-range-min="0" data-val-range-max="100" />
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].DiscountPercent" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <input name="Items[0].TaxRate" class="form-control tax" type="number" min="0" max="100"
+                                           data-val="true" data-val-range="The field Tax Rate must be between 0 and 100."
+                                           data-val-range-min="0" data-val-range-max="100" />
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].TaxRate" data-valmsg-replace="true"></span>
+                                </td>
+                                <td class="item-total">0.00</td>
+                                <td>
+                                    <input name="Items[0].Notes" class="form-control" />
+                                    <span class="text-danger field-validation-valid"
+                                          data-valmsg-for="Items[0].Notes" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8">
+                                <button type="button" id="addItem" class="btn btn-success btn-sm">Add Item</button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            var allProducts = @Html.Raw(Json.Serialize(Model.Products.Select(p => new {
+                Id = p.Id,
+                Name = p.Name,
+                CategoryId = p.Category?.Id,
+                CategoryName = p.Category?.Name,
+                Price = p.PurchasePrice
+            })));
+
+            // Initialize with existing items if any
+            initializeExistingItems();
+
+            // Add category filter functionality
+            $('#categoryFilter').change(function () {
+                var categoryId = $(this).val();
+                $('.product-select').each(function () {
+                    var $select = $(this);
+                    var currentValue = $select.val();
+                    $select.empty();
+                    $select.append('<option value="">-- Select Product --</option>');
+
+                    // Filter products by category
+                    var filteredProducts = categoryId ?
+                        allProducts.filter(p => p.categoryId == categoryId) :
+                        allProducts;
+
+                    // Add filtered products to select
+                    filteredProducts.forEach(function (product) {
+                        $select.append($('<option></option>').val(product.id).text(product.name));
+                    });
+
+                    // Restore the selected value if it exists in the filtered list
+                    if (currentValue && filteredProducts.some(p => p.id == currentValue)) {
+                        $select.val(currentValue);
+                    }
+                });
+            });
+
+            // Add new item row
+            $('#addItem').click(function () {
+                var index = $('#itemsTable tbody tr').length;
+                var categoryId = $('#categoryFilter').val();
+                var filteredProducts = categoryId ?
+                    allProducts.filter(p => p.categoryId == categoryId) :
+                    allProducts;
+
+                var newRow = `
+                    <tr>
+                        <td>
+                            <select name="Items[${index}].ProductId" class="form-control product-select"
+                                    data-val="true" data-val-required="The Product field is required.">
+                                <option value="">-- Select Product --</option>
+                                ${filteredProducts.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                            </select>
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].ProductId" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="Items[${index}].Quantity" class="form-control quantity" type="number" min="1"
+                                data-val="true" data-val-required="The Quantity field is required."
+                                data-val-range="The field Quantity must be between 1 and 2147483647."
+                                data-val-range-min="1" data-val-range-max="2147483647" value="1" />
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].Quantity" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="Items[${index}].UnitPrice" class="form-control unit-price" type="number" min="0" step="0.01"
+                                data-val="true" data-val-required="The Unit Price field is required."
+                                data-val-range="The field Unit Price must be between 0 and 1.7976931348623157E+308."
+                                data-val-range-min="0" data-val-range-max="1.7976931348623157E+308" />
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].UnitPrice" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="Items[${index}].DiscountPercent" class="form-control discount" type="number" min="0" max="100"
+                                data-val="true" data-val-range="The field Discount Percent must be between 0 and 100."
+                                data-val-range-min="0" data-val-range-max="100" value="0" />
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].DiscountPercent" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="Items[${index}].TaxRate" class="form-control tax" type="number" min="0" max="100"
+                                data-val="true" data-val-range="The field Tax Rate must be between 0 and 100."
+                                data-val-range-min="0" data-val-range-max="100" value="0" />
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].TaxRate" data-valmsg-replace="true"></span>
+                        </td>
+                        <td class="item-total">0.00</td>
+                        <td>
+                            <input name="Items[${index}].Notes" class="form-control" />
+                            <span class="text-danger field-validation-valid"
+                                data-valmsg-for="Items[${index}].Notes" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                        </td>
+                    </tr>
+                `;
+                $('#itemsTable tbody').append(newRow);
+
+                // Re-apply validation
+                $.validator.unobtrusive.parse($('#poForm'));
+            });
+
+            // Remove item row
+            $(document).on('click', '.remove-item', function () {
+                $(this).closest('tr').remove();
+                updateItemIndices();
+            });
+
+            // Calculate item total when values change
+            $(document).on('change keyup', '.quantity, .unit-price, .discount, .tax', function () {
+                var row = $(this).closest('tr');
+                calculateItemTotal(row);
+            });
+
+            // Update unit price when product is selected
+            $(document).on('change', '.product-select', function () {
+                var productId = $(this).val();
+                var row = $(this).closest('tr');
+                
+                if (productId) {
+                    var product = allProducts.find(p => p.id == productId);
+                    if (product) {
+                        row.find('.unit-price').val(product.price || 0);
+                        calculateItemTotal(row);
+                    }
+                }
+            });
+
+            // Initialize existing items with their calculated totals
+            function initializeExistingItems() {
+                $('#itemsTable tbody tr').each(function() {
+                    calculateItemTotal($(this));
+                });
+            }
+
+            function calculateItemTotal(row) {
+                var quantity = parseFloat(row.find('.quantity').val()) || 0;
+                var unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
+                var discount = parseFloat(row.find('.discount').val()) || 0;
+                var tax = parseFloat(row.find('.tax').val()) || 0;
+
+                var subtotal = quantity * unitPrice * (1 - discount / 100);
+                var total = subtotal * (1 + tax / 100);
+
+                row.find('.item-total').text(total.toFixed(2));
+            }
+
+            function updateItemIndices() {
+                $('#itemsTable tbody tr').each(function (index) {
+                    $(this).find('select, input').each(function () {
+                        var name = $(this).attr('name');
+                        if (name) {
+                            name = name.replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('name', name);
+                        }
+
+                        var id = $(this).attr('id');
+                        if (id) {
+                            id = id.replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('id', id);
+                        }
+
+                        var dataValMsgFor = $(this).attr('data-valmsg-for');
+                        if (dataValMsgFor) {
+                            dataValMsgFor = dataValMsgFor.replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('data-valmsg-for', dataValMsgFor);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+}

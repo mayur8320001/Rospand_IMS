@@ -1,0 +1,80 @@
+﻿@model IEnumerable<Rospand_IMS.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Purchase Orders";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>@ViewData["Title"]</h4>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="Index" method="get" class="form-inline">
+                <div class="form-group mr-2">
+                    <label class="mr-2">Filter by Status:</label>
+                    <select name="status" asp-items="Html.GetEnumSelectList<PurchaseOrderStatus>()" class="form-control">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </form>
+        </div>
+
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Vendor</th>
+                    <th>Order Date</th>
+                    <th>Expected Delivery</th>
+                    <th>Status</th>
+                    <th>Total Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.PONumber)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Vendor.CompanyName)</td>
+                        <td>@item.OrderDate.ToString("d")</td>
+                        <td>@item.ExpectedDeliveryDate.ToString("d")</td>
+                        <td>
+                            <span class="badge @GetStatusBadgeClass(item.Status)">
+                                @Html.DisplayFor(modelItem => item.Status)
+                            </span>
+                        </td>
+                        <td>@item.TotalAmount.ToString("C")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
+                            @if (item.Status == PurchaseOrderStatus.Draft)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadgeClass(PurchaseOrderStatus status)
+    {
+        return status switch
+        {
+            PurchaseOrderStatus.Draft => "badge-secondary",
+            PurchaseOrderStatus.Submitted => "badge-primary",
+            PurchaseOrderStatus.Approved => "badge-info",
+            PurchaseOrderStatus.Ordered => "badge-warning",
+            PurchaseOrderStatus.PartiallyReceived => "badge-warning",
+            PurchaseOrderStatus.Received => "badge-success",
+            PurchaseOrderStatus.Cancelled => "badge-danger",
+            _ => "badge-secondary",
+        };
+    }
+}

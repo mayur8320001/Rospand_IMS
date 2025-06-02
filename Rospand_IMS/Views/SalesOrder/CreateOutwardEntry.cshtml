@@ -1,0 +1,74 @@
+﻿@model Rospand_IMS.Models.OutwardEntryCreateViewModel
+
+<h2>Create Outward Entry</h2>
+
+<form asp-action="CreateOutwardEntry" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label>Sales Order</label>
+        <input type="hidden" asp-for="SalesOrderId" />
+        <input class="form-control" value="@Model.SONumber (@Model.CustomerDisplayName)" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="OutwardNumber"></label>
+        <input asp-for="OutwardNumber" class="form-control" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="OutwardDate"></label>
+        <input asp-for="OutwardDate" class="form-control" type="date" />
+        <span asp-validation-for="OutwardDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="WarehouseId"></label>
+        <select asp-for="WarehouseId" asp-items="Model.Warehouses" class="form-control"></select>
+        <span asp-validation-for="WarehouseId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Notes"></label>
+        <textarea asp-for="Notes" class="form-control"></textarea>
+    </div>
+
+    <h3>Items</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Ordered</th>
+                <th>Available</th>
+                <th>Quantity to Dispatch</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input type="hidden" asp-for="Items[i].ProductId" />
+                        @Model.Items[i].ProductName (@Model.Items[i].ProductSKU)
+                    </td>
+                    <td>@Model.Items[i].QuantityOrdered</td>
+                    <td>@Model.Items[i].QuantityAvailable</td>
+                    <td>
+                        <input asp-for="Items[i].Quantity" class="form-control" />
+                        <span asp-validation-for="Items[i].Quantity" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Items[i].Notes" class="form-control" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">Create Outward Entry</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

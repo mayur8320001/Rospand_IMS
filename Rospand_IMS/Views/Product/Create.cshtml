@@ -1,0 +1,249 @@
+﻿@model CreateProductViewModel
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Create" method="post" id="productForm">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Create New Product</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Basic Info -->
+                            <div class="form-group">
+                                <label asp-for="SelectedType" class="control-label"></label>
+                                <select asp-for="SelectedType" class="form-control" id="productTypeSelect">
+                                    <option value="@ProductType.Goods">Goods</option>
+                                    <option value="@ProductType.Services">Services</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Name" class="control-label"></label>
+                                <input asp-for="Name" class="form-control" type="text" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="AutoGenerateSKU" class="control-label"></label>
+                                <input type="checkbox" asp-for="AutoGenerateSKU" class="form-check-input" id="autoSkuCheck" />
+                            </div>
+
+                            <div class="form-group" id="manualSkuGroup" style="display: none;">
+                                <label asp-for="SKU" class="control-label"></label>
+                                <input asp-for="SKU" class="form-control" type="text" />
+                                <span asp-validation-for="SKU" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="CategoryId" class="control-label"></label>
+                                <select asp-for="CategoryId" class="form-control" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                                    <option value="">-- Select Category --</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Description" class="control-label"></label>
+                                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <!-- Type-specific fields -->
+                            <div id="goodsFields">
+                                <div class="form-group">
+                                    <label asp-for="UnitId" class="control-label"></label>
+                                    <select asp-for="UnitId" class="form-control" asp-items="@(new SelectList(Model.Units, "Id", "Name"))">
+                                        <option value="">-- Select Unit --</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="CostCategoryId" class="control-label"></label>
+                                    <select asp-for="CostCategoryId" class="form-control" asp-items="@(new SelectList(Model.CostCategories, "Id", "Name"))">
+                                        <option value="">-- Select Cost Category --</option>
+                                    </select>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="SalesPrice" class="control-label"></label>
+                                            <input asp-for="SalesPrice" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="PurchasePrice" class="control-label"></label>
+                                            <input asp-for="PurchasePrice" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5>Dimensions</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="Length" class="control-label"></label>
+                                            <input asp-for="Length" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="Width" class="control-label"></label>
+                                            <input asp-for="Width" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="Height" class="control-label"></label>
+                                            <input asp-for="Height" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label asp-for="DimensionUnit" class="control-label"></label>
+                                            <select asp-for="DimensionUnit" class="form-control"
+                                                    asp-items="Html.GetEnumSelectList<DimensionUnit>()">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label asp-for="Weight" class="control-label"></label>
+                                            <input asp-for="Weight" class="form-control" type="number" step="0.01" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label asp-for="WeightUnit" class="control-label"></label>
+                                            <select asp-for="WeightUnit" class="form-control" asp-items="Html.GetEnumSelectList<WeightUnit>()">
+                                                <option value="">-- Select Weight --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="serviceFields" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="ServiceDuration" class="control-label"></label>
+                                            <input asp-for="ServiceDuration" class="form-control" type="number" step="0.01" min="0" />
+                                            <span asp-validation-for="ServiceDuration" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="ServiceDurationUnit" class="control-label"></label>
+                                            <select asp-for="ServiceDurationUnit" class="form-control"
+                                                    asp-items="Html.GetEnumSelectList<ServiceDurationUnit>()">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grouped Product Section -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label asp-for="IsGroupedProduct" class="control-label"></label>
+                                <input type="checkbox" asp-for="IsGroupedProduct" id="groupedProductCheck" class="form-check-input" />
+                            </div>
+
+                            <div id="componentsSection" style="display: none;">
+                                <h4>Product Components</h4>
+                                <div id="componentsContainer">
+                                    <!-- Components will be added here dynamically -->
+                                </div>
+                                <button type="button" id="addComponentBtn" class="btn btn-secondary mt-2">
+                                    <i class="fas fa-plus"></i> Add Component
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                  
+                
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Create Product</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function toggleFields() {
+            const type = $('#productTypeSelect').val();
+            if (type === 'Goods') {
+                $('#goodsFields').show();
+                $('#serviceFields').hide();
+            } else {
+                $('#goodsFields').hide();
+                $('#serviceFields').show();
+            }
+        }
+
+        function toggleSKUField() {
+            $('#manualSkuGroup').toggle(!$('#autoSkuCheck').is(':checked'));
+        }
+
+        function toggleGroupedFields() {
+            $('#componentsSection').toggle($('#groupedProductCheck').is(':checked'));
+        }
+
+        $(document).ready(function () {
+            toggleFields();
+            toggleSKUField();
+            toggleGroupedFields();
+
+            $('#productTypeSelect').change(toggleFields);
+            $('#autoSkuCheck').change(toggleSKUField);
+            $('#groupedProductCheck').change(toggleGroupedFields);
+
+            // Add Component button logic
+            $('#addComponentBtn').click(function () {
+                const index = $('#componentsContainer .component-group').length;
+                const html = `
+                            <div class="component-group border p-2 mb-2">
+                                <div class="form-group">
+                                    <label>Component Product</label>
+                                    <select name="Components[${index}].ComponentProductId" class="form-control">
+                                        <option value="">-- Select Product --</option>
+        @foreach (var product in Model.AvailableProducts)
+        {
+                                                <option value="@product.Id">@product.Name (@product.SKU)</option>
+        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" name="Components[${index}].Quantity" class="form-control" value="1" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Notes</label>
+                                    <input type="text" name="Components[${index}].Notes" class="form-control" />
+                                </div>
+                            </div>
+                        `;
+                $('#componentsContainer').append(html);
+            });
+        });
+    </script>
+}

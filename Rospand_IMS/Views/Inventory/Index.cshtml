@@ -1,0 +1,147 @@
+﻿@model IEnumerable<Rospand_IMS.Models.Inventory>
+
+@{
+    ViewData["Title"] = "Inventory Stock";
+
+    // Calculate metrics
+    decimal totalInventoryValue = Model.Sum(i => (i.Product.PurchasePrice ?? 0) * i.QuantityOnHand);
+    decimal totalPotentialSalesValue = Model.Sum(i => (i.Product.SalesPrice ?? 0) * i.QuantityOnHand);
+    int totalProducts = Model.Select(i => i.ProductId).Distinct().Count();
+    int lowStockItems = Model.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 10); // Threshold of 10 for low stock
+    var categories = Model.Select(i => i.Product.Category?.Name).Where(name => !string.IsNullOrEmpty(name)).Distinct();
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>@ViewData["Title"]</h4>
+            </div>
+            <div class="col-md-6 text-right">
+                <a asp-action="Transactions" class="btn btn-info">View Transactions</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards Row -->
+    <div class="row p-3">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Inventory Value</h6>
+                    <h4 class="card-text">@totalInventoryValue.ToString("C")</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Potential Sales Value</h6>
+                    <h4 class="card-text">@totalPotentialSalesValue.ToString("C")</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title">Low Stock Alerts</h6>
+                    <h4 class="card-text">@lowStockItems</h4>
+                    @if (lowStockItems > 0)
+                    {
+                        <a asp-action="LowStock" class="small text-dark">View Items</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Categories</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="categoriesDropdown" data-toggle="dropdown">
+                            @categories.Count() Categories
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="categoriesDropdown">
+                            @foreach (var category in categories)
+                            {
+                                <a class="dropdown-item" href="#">@category</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card-body">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Warehouse</th>
+                    <th>On Hand</th>
+                    <th>Reserved</th>
+                    <th>Available</th>
+                    <th>Purchase Value</th>
+                    <th>Sales Value</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var purchaseValue = (item.Product.PurchasePrice ?? 0) * item.QuantityOnHand;
+                    var salesValue = (item.Product.SalesPrice ?? 0) * item.QuantityOnHand;
+
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Product.SKU</td>
+                        <td>@(item.Product.Category?.Name ?? "N/A")</td>
+                        <td>@item.Warehouse.Name</td>
+                        <td>@item.QuantityOnHand</td>
+                        <td>@item.QuantityReserved</td>
+                        <td class="@((item.QuantityOnHand - item.QuantityReserved) < 10 ? "text-danger font-weight-bold" : "")">
+                            @(item.QuantityOnHand - item.QuantityReserved)
+                        </td>
+                        <td>@purchaseValue.ToString("C")</td>
+                        <td>@salesValue.ToString("C")</td>
+                        <td>@item.LastUpdated.ToString("g")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-productId="@item.ProductId" asp-route-warehouseId="@item.WarehouseId"
+                               class="btn btn-sm btn-info">Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="font-weight-bold">
+                    <td colspan="7" class="text-right">Totals:</td>
+                    <td>@totalInventoryValue.ToString("C")</td>
+                    <td>@totalPotentialSalesValue.ToString("C")</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Highlight low stock rows
+        $(document).ready(function () {
+            $('tbody tr').each(function () {
+                const available = parseInt($(this).find('td:nth-child(7)').text());
+                if (available < 10) {
+                    $(this).addClass('table-warning');
+                }
+            });
+        });
+    </script>
+}

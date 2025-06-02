@@ -1,0 +1,91 @@
+﻿@model Rospand_IMS.Models.Inventory
+
+@{
+    ViewData["Title"] = "Inventory Details";
+    var transactions = ViewBag.Transactions as List<Rospand_IMS.Models.InventoryTransaction>;
+}
+
+<div class="container">
+    <h1>Inventory Details</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>@Model.Product.Name - @Model.Warehouse.Name</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Product:</dt>
+                        <dd class="col-sm-8">@Model.Product.Name</dd>
+
+                        <dt class="col-sm-4">Warehouse:</dt>
+                        <dd class="col-sm-8">@Model.Warehouse.Name</dd>
+
+                        <dt class="col-sm-4">Location:</dt>
+                        <dd class="col-sm-8">@Model.Warehouse.Location</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Quantity On Hand:</dt>
+                        <dd class="col-sm-8">@Model.QuantityOnHand</dd>
+
+                        <dt class="col-sm-4">Quantity Reserved:</dt>
+                        <dd class="col-sm-8">@Model.QuantityReserved</dd>
+
+                        <dt class="col-sm-4">Quantity Available:</dt>
+                        <dd class="col-sm-8 @(Model.QuantityAvailable < 5 ? "text-danger font-weight-bold" : "")">
+                            @Model.QuantityAvailable
+                        </dd>
+
+                        <dt class="col-sm-4">Last Updated:</dt>
+                        <dd class="col-sm-8">@Model.LastUpdated.ToString("g")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Recent Transactions</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Reference</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in transactions)
+                    {
+                        <tr>
+                            <td>@transaction.TransactionDate.ToString("g")</td>
+                            <td>@transaction.TransactionType</td>
+                            <td class="@(transaction.Quantity > 0 ? "text-success" : "text-danger")">
+                                @(transaction.TransactionType.ToString().Contains("Out") ||
+                                    transaction.TransactionType == InventoryTransactionType.Sale ?
+                                    "-" + transaction.Quantity : "+" + transaction.Quantity)
+                            </td>
+                            <td>@transaction.ReferenceNumber</td>
+                            <td>@transaction.Notes</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <a asp-controller="InventoryTransactions" asp-action="Index"
+               asp-route-productId="@Model.ProductId" asp-route-warehouseId="@Model.WarehouseId"
+               class="btn btn-sm btn-secondary">View All Transactions</a>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to Inventory</a>
+    </div>
+</div>

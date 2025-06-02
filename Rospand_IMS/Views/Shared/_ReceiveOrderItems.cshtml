@@ -1,0 +1,42 @@
+﻿@model PurchaseOrder
+
+@if (Model != null)
+{
+    <div class="card mt-3">
+        <div class="card-header">
+            <h4>PO @Model.PONumber - @Model.Vendor.CompanyName</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Ordered Qty</th>
+                        <th>Previously Received</th>
+                        <th>Remaining</th>
+                        <th>Receive Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Product.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.ReceivedQuantity</td>
+                            <td>@(item.Quantity - item.ReceivedQuantity)</td>
+                            <td>
+                                <input type="number"
+                                       name="ReceivedQuantities[@item.Id]"
+                                       class="form-control receive-qty"
+                                       min="0"
+                                       max="@(item.Quantity - item.ReceivedQuantity)"
+                                       value="0" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
