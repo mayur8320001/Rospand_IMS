@@ -46,6 +46,8 @@ namespace Rospand_IMS.Models
         public DateTime? ModifiedDate { get; set; }
 
         public ICollection<SalesOrderItem> Items { get; set; } = new List<SalesOrderItem>();
+       public ICollection<OutwardEntry> OutwardEntries { get; set; } = new List<OutwardEntry>();
+
     }
 
     public class SalesOrderItem
@@ -79,6 +81,8 @@ namespace Rospand_IMS.Models
 
         [StringLength(200)]
         public string Notes { get; set; }
+      //  public virtual ICollection<OutwardEntryItem> OutwardEntryItems { get; set; }
+
     }
 
     public enum SalesOrderStatus

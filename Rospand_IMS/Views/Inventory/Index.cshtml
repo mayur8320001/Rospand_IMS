@@ -6,8 +6,14 @@
     // Calculate metrics
     decimal totalInventoryValue = Model.Sum(i => (i.Product.PurchasePrice ?? 0) * i.QuantityOnHand);
     decimal totalPotentialSalesValue = Model.Sum(i => (i.Product.SalesPrice ?? 0) * i.QuantityOnHand);
+    decimal totalProfitPotential = totalPotentialSalesValue - totalInventoryValue;
+    decimal totalMarginPercentage = totalInventoryValue > 0 ? (totalProfitPotential / totalInventoryValue) * 100 : 0;
+    decimal totalSalesValue = ViewBag.TotalSalesValue ?? 0;
+    decimal totalActualProfit = totalSalesValue - totalInventoryValue;
+    decimal totalActualMarginPercentage = totalInventoryValue > 0 ? (totalActualProfit / totalInventoryValue) * 100 : 0;
+
     int totalProducts = Model.Select(i => i.ProductId).Distinct().Count();
-    int lowStockItems = Model.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 10); // Threshold of 10 for low stock
+    int lowStockItems = Model.Count(i => (i.QuantityOnHand - i.QuantityReserved) < 10);
     var categories = Model.Select(i => i.Product.Category?.Name).Where(name => !string.IsNullOrEmpty(name)).Distinct();
 }
 
@@ -19,129 +25,202 @@
             </div>
             <div class="col-md-6 text-right">
                 <a asp-action="Transactions" class="btn btn-info">View Transactions</a>
+                <button class="btn btn-success" onclick="exportToExcel()">Export to Excel</button>
             </div>
         </div>
     </div>
 
-    <!-- Summary Cards Row -->
+    <!-- Enhanced Summary Cards Row -->
     <div class="row p-3">
+        <!-- Inventory Value Card -->
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h6 class="card-title">Total Inventory Value</h6>
                     <h4 class="card-text">@totalInventoryValue.ToString("C")</h4>
+                    <small>Based on purchase price</small>
                 </div>
             </div>
         </div>
 
+        <!-- Sales Value Card -->
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h6 class="card-title">Potential Sales Value</h6>
                     <h4 class="card-text">@totalPotentialSalesValue.ToString("C")</h4>
+                    <small>Based on selling price</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h6 class="card-title">Low Stock Alerts</h6>
-                    <h4 class="card-text">@lowStockItems</h4>
-                    @if (lowStockItems > 0)
-                    {
-                        <a asp-action="LowStock" class="small text-dark">View Items</a>
-                    }
-                </div>
-            </div>
-        </div>
-
+        <!-- Actual Sales Value Card -->
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Categories</h6>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="categoriesDropdown" data-toggle="dropdown">
-                            @categories.Count() Categories
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="categoriesDropdown">
-                            @foreach (var category in categories)
-                            {
-                                <a class="dropdown-item" href="#">@category</a>
-                            }
-                        </div>
+                    <h6 class="card-title">Actual Sales Value</h6>
+                    <h4 class="card-text">@totalSalesValue.ToString("C")</h4>
+                    <small>From confirmed sales orders</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Potential Card -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Actual Profit</h6>
+                    <h4 class="card-text">@totalActualProfit.ToString("C")</h4>
+                    <small>@totalActualMarginPercentage.ToString("0.00")% margin</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Alerts Card -->
+        <div class="col-md-3">
+            <div class="card @(lowStockItems > 0 ? "bg-warning" : "bg-secondary") text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Stock Alerts</h6>
+                    <div class="d-flex justify-content-between">
+                        <h4 class="card-text">@lowStockItems</h4>
+                        @if (lowStockItems > 0)
+                        {
+                            <a asp-action="LowStock" class="btn btn-sm btn-light">View Items</a>
+                        }
                     </div>
+                    <small>Items below 10 in stock</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Inventory Table -->
+    <!-- Inventory Table with Enhanced Sales Data -->
     <div class="card-body">
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>SKU</th>
-                    <th>Category</th>
-                    <th>Warehouse</th>
-                    <th>On Hand</th>
-                    <th>Reserved</th>
-                    <th>Available</th>
-                    <th>Purchase Value</th>
-                    <th>Sales Value</th>
-                    <th>Last Updated</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    var purchaseValue = (item.Product.PurchasePrice ?? 0) * item.QuantityOnHand;
-                    var salesValue = (item.Product.SalesPrice ?? 0) * item.QuantityOnHand;
-
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered" id="inventoryTable">
+                <thead class="thead-dark">
                     <tr>
-                        <td>@item.Product.Name</td>
-                        <td>@item.Product.SKU</td>
-                        <td>@(item.Product.Category?.Name ?? "N/A")</td>
-                        <td>@item.Warehouse.Name</td>
-                        <td>@item.QuantityOnHand</td>
-                        <td>@item.QuantityReserved</td>
-                        <td class="@((item.QuantityOnHand - item.QuantityReserved) < 10 ? "text-danger font-weight-bold" : "")">
-                            @(item.QuantityOnHand - item.QuantityReserved)
-                        </td>
-                        <td>@purchaseValue.ToString("C")</td>
-                        <td>@salesValue.ToString("C")</td>
-                        <td>@item.LastUpdated.ToString("g")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-productId="@item.ProductId" asp-route-warehouseId="@item.WarehouseId"
-                               class="btn btn-sm btn-info">Details</a>
-                        </td>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Warehouse</th>
+                        <th class="text-right">On Hand</th>
+                        <th class="text-right">Reserved</th>
+                        <th class="text-right">Available</th>
+                        <th class="text-right">Purchase Price</th>
+                        <th class="text-right">Sales Price</th>
+                        <th class="text-right">Purchase Value</th>
+                        <th class="text-right">Sales Value</th>
+                        <th class="text-right">Actual Sales Value</th>
+                        <th class="text-right">Actual Profit</th>
+                        <th class="text-right">Actual Margin</th>
+                        <th>Actions</th>
                     </tr>
-                }
-            </tbody>
-            <tfoot>
-                <tr class="font-weight-bold">
-                    <td colspan="7" class="text-right">Totals:</td>
-                    <td>@totalInventoryValue.ToString("C")</td>
-                    <td>@totalPotentialSalesValue.ToString("C")</td>
-                    <td colspan="2"></td>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var available = item.QuantityOnHand - item.QuantityReserved;
+                        var purchaseValue = (item.Product.PurchasePrice ?? 0) * item.QuantityOnHand;
+                        var salesValue = (item.Product.SalesPrice ?? 0) * item.QuantityOnHand;
+                        var profit = salesValue - purchaseValue;
+                        var margin = item.Product.PurchasePrice > 0 ?
+                        ((item.Product.SalesPrice - item.Product.PurchasePrice) / item.Product.PurchasePrice) * 100 : 0;
+
+                        var actualSalesValue = ViewBag.SalesValueByProduct != null && ViewBag.SalesValueByProduct.ContainsKey(item.ProductId)
+                        ? ViewBag.SalesValueByProduct[item.ProductId]
+                        : 0;
+                        var actualProfit = actualSalesValue - purchaseValue;
+                        var actualMargin = purchaseValue > 0 ? (actualProfit / purchaseValue) * 100 : 0;
+
+                        <tr class="@(available < 10 ? "table-warning" : "") @(available < 0 ? "table-danger" : "")">
+                            <td>@item.Product.Name</td>
+                            <td>@item.Product.SKU</td>
+                            <td>@(item.Product.Category?.Name ?? "N/A")</td>
+                            <td>@item.Warehouse.Name</td>
+                            <td class="text-right">@item.QuantityOnHand</td>
+                            <td class="text-right">@item.QuantityReserved</td>
+                            <td class="text-right @(available < 10 ? "font-weight-bold" : "")">@available</td>
+                            <td class="text-right">@((item.Product.PurchasePrice ?? 0).ToString("C"))</td>
+                            <td class="text-right">@((item.Product.SalesPrice ?? 0).ToString("C"))</td>
+                            <td class="text-right">@purchaseValue.ToString("C")</td>
+                            <td class="text-right">@salesValue.ToString("C")</td>
+                            <td class="text-right">@actualSalesValue.ToString("C")</td>
+                            <td class="text-right @(actualProfit < 0 ? "text-danger" : "text-success")">@actualProfit.ToString("C")</td>
+                            <td class="text-right @(actualMargin < 0 ? "text-danger" : "text-success")">@actualMargin.ToString("0.00")%</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details"
+                                       asp-route-productId="@item.ProductId"
+                                       asp-route-warehouseId="@item.WarehouseId"
+                                       class="btn btn-info" title="Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-controller="SalesOrder"
+                                       asp-action="Create"
+                                       asp-route-productId="@item.ProductId"
+                                       class="btn btn-success" title="Sell">
+                                        <i class="fas fa-cash-register"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="font-weight-bold">
+                    <tr>
+                        <td colspan="9" class="text-right">Totals:</td>
+                        <td class="text-right">@totalInventoryValue.ToString("C")</td>
+                        <td class="text-right">@totalPotentialSalesValue.ToString("C")</td>
+                        <td class="text-right">@totalSalesValue.ToString("C")</td>
+                        <td class="text-right @(totalActualProfit < 0 ? "text-danger" : "text-success")">@totalActualProfit.ToString("C")</td>
+                        <td class="text-right @(totalActualMarginPercentage < 0 ? "text-danger" : "text-success")">@totalActualMarginPercentage.ToString("0.00")%</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 </div>
 
+@section Styles {
+    <style>
+        .table th {
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .table-responsive {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border-radius: 0.2rem;
+        }
+    </style>
+}
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
-        // Highlight low stock rows
         $(document).ready(function () {
-            $('tbody tr').each(function () {
-                const available = parseInt($(this).find('td:nth-child(7)').text());
-                if (available < 10) {
-                    $(this).addClass('table-warning');
-                }
-            });
+            $('[title]').tooltip();
         });
+
+        function exportToExcel() {
+            const table = document.getElementById('inventoryTable');
+            const workbook = XLSX.utils.table_to_book(table);
+            XLSX.writeFile(workbook, 'Inventory_Stock_Report.xlsx');
+        }
     </script>
 }

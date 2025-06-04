@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rospand_IMS.Data;
 
@@ -11,9 +12,11 @@ using Rospand_IMS.Data;
 namespace Rospand_IMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250603054822_bkn")]
+    partial class bkn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1333,7 +1336,7 @@ namespace Rospand_IMS.Migrations
             modelBuilder.Entity("Rospand_IMS.Models.OutwardEntry", b =>
                 {
                     b.HasOne("Rospand_IMS.Models.SalesOrder", "SalesOrder")
-                        .WithMany("OutwardEntries")
+                        .WithMany()
                         .HasForeignKey("SalesOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1551,8 +1554,6 @@ namespace Rospand_IMS.Migrations
             modelBuilder.Entity("Rospand_IMS.Models.SalesOrder", b =>
                 {
                     b.Navigation("Items");
-
-                    b.Navigation("OutwardEntries");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.Vendor", b =>

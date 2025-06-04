@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rospand_IMS.Data;
 
@@ -11,9 +12,11 @@ using Rospand_IMS.Data;
 namespace Rospand_IMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250604094756_itemso")]
+    partial class itemso
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -463,7 +466,6 @@ namespace Rospand_IMS.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -523,11 +525,16 @@ namespace Rospand_IMS.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SalesOrderItemId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OutwardEntryId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("SalesOrderItemId");
 
                     b.ToTable("OutwardEntryItems");
                 });
@@ -1363,6 +1370,10 @@ namespace Rospand_IMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Rospand_IMS.Models.SalesOrderItem", null)
+                        .WithMany("OutwardEntryItems")
+                        .HasForeignKey("SalesOrderItemId");
+
                     b.Navigation("OutwardEntry");
 
                     b.Navigation("Product");
@@ -1553,6 +1564,11 @@ namespace Rospand_IMS.Migrations
                     b.Navigation("Items");
 
                     b.Navigation("OutwardEntries");
+                });
+
+            modelBuilder.Entity("Rospand_IMS.Models.SalesOrderItem", b =>
+                {
+                    b.Navigation("OutwardEntryItems");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.Vendor", b =>

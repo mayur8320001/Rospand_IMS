@@ -1,0 +1,208 @@
+﻿@model Rospand_IMS.Models.SalesOrderDetailsViewModel
+
+@{
+    ViewData["Title"] = $"Sales Order #{Model.SalesOrder.SONumber}";
+}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>Sales Order #@Model.SalesOrder.SONumber</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Customer:</dt>
+                    <dd class="col-sm-8">@Model.SalesOrder.Customer.CustomerDisplayName</dd>
+                    <dt class="col-sm-4">Order Date:</dt>
+                    <dd class="col-sm-8">@Model.SalesOrder.OrderDate.ToString("d")</dd>
+                    <dt class="col-sm-4">Expected Delivery:</dt>
+                    <dd class="col-sm-8">@(Model.SalesOrder.ExpectedDeliveryDate?.ToString("d") ?? "N/A")</dd>
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@GetStatusBadgeColor(Model.SalesOrder.Status)">
+                            @Model.SalesOrder.Status
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Total Ordered:</dt>
+                    <dd class="col-sm-8">@Model.TotalOrdered</dd>
+                    <dt class="col-sm-4">Total Dispatched:</dt>
+                    <dd class="col-sm-8">@Model.TotalDispatched</dd>
+                    <dt class="col-sm-4">Remaining:</dt>
+                    <dd class="col-sm-8">@Model.RemainingToDispatch</dd>
+                    <dt class="col-sm-4">Total Amount:</dt>
+                    <dd class="col-sm-8">@Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</dd>
+                </dl>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.SalesOrder.Notes))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <strong>Notes:</strong> @Model.SalesOrder.Notes
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Order Items</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Discount (%)</th>
+                        <th>Tax Rate (%)</th>
+                        <th>Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.SalesOrder.Items)
+                    {
+                        <tr>
+                            <td>@item.Product.Name</td>
+                            <td>@item.Product.SKU</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</td>
+                            <td>@item.DiscountPercent</td>
+                            <td>@item.TaxRate</td>
+                            <td>@item.LineTotal.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Dispatch History</h4>
+    </div>
+    <div class="card-body">
+        @if (Model.SalesOrder.OutwardEntries.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Outward #</th>
+                            <th>Date</th>
+                            <th>Warehouse</th>
+                            <th>Status</th>
+                            <th>Items</th>
+                            <th>Total Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model.SalesOrder.OutwardEntries.OrderByDescending(e => e.OutwardDate))
+                        {
+                            <tr>
+                                <td>@entry.OutwardNumber</td>
+                                <td>@entry.OutwardDate.ToShortDateString()</td>
+                                <td>@entry.Warehouse?.Name</td>
+                                <td>
+                                    <span class="badge bg-@GetStatusBadgeClass(entry.Status)">
+                                        @entry.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <ul class="list-unstyled">
+                                        @foreach (var item in entry.Items)
+                                        {
+                                            <li>@item.Product.Name (x@item.Quantity)</li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td>@entry.Items.Sum(i => i.Quantity)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">No dispatch entries yet.</div>
+        }
+
+        @if (Model.SalesOrder.Status == SalesOrderStatus.Confirmed || Model.SalesOrder.Status == SalesOrderStatus.PartiallyShipped)
+        {
+            <div class="mt-3">
+                <a asp-action="CreateOutwardEntry" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-primary">
+                    <i class="fas fa-truck"></i> Create New Dispatch
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to List
+    </a>
+    @if (Model.SalesOrder.Status == SalesOrderStatus.Draft)
+    {
+        <form asp-action="Confirm" asp-route-id="@Model.SalesOrder.Id" method="post" style="display:inline;">
+            <input type="hidden" name="id" value="@Model.SalesOrder.Id" />
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-check"></i> Confirm Order
+            </button>
+        </form>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .badge {
+            font-size: 0.9em;
+            padding: 0.5em 1em;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+    </style>
+}
+
+@functions {
+    string GetStatusBadgeColor(SalesOrderStatus status)
+    {
+        return status switch
+        {
+            SalesOrderStatus.Draft => "secondary",
+            SalesOrderStatus.Confirmed => "primary",
+            SalesOrderStatus.Picking => "info",
+            SalesOrderStatus.Packed => "info",
+            SalesOrderStatus.Shipped => "success",
+            SalesOrderStatus.PartiallyShipped => "warning",
+            SalesOrderStatus.Delivered => "success",
+            SalesOrderStatus.Cancelled => "danger",
+            SalesOrderStatus.OnHold => "warning",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusBadgeClass(OutwardEntryStatus status)
+    {
+        return status switch
+        {
+            OutwardEntryStatus.Draft => "secondary",
+            OutwardEntryStatus.Processed => "success",
+            OutwardEntryStatus.Cancelled => "danger",
+            _ => "primary"
+        };
+    }
+}

@@ -20,6 +20,7 @@ namespace Rospand_IMS.Models
 
         [Required]
         public int QuantityReserved { get; set; }
+        public int? LastTransactionId { get; set; }
 
         [NotMapped]
         public int QuantityAvailable => QuantityOnHand - QuantityReserved;
@@ -59,8 +60,23 @@ namespace Rospand_IMS.Models
         [StringLength(200)]
         public string? ReferenceNumber { get; set; }
 
+        public int? OutwardEntryId { get; set; }
+        public OutwardEntry? OutwardEntry { get; set; }
+
+        // Add these new properties
+        public int? PreviousQuantity { get; set; }
+        public int? NewQuantity { get; set; }
+
         [StringLength(500)]
         public string? Notes { get; set; }
+     
+    }
+    public class InventoryIssue
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int Required { get; set; }
+        public int Available { get; set; }
     }
 
     public enum InventoryTransactionType
@@ -70,8 +86,10 @@ namespace Rospand_IMS.Models
         Adjustment,
         TransferIn,
         TransferOut,
+        Reservation,
         Return,
         Damage,
+        Outward,
         Expired
     }
 

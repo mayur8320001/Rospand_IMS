@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rospand_IMS.Models
 {
@@ -60,7 +61,7 @@ namespace Rospand_IMS.Models
         public decimal? PurchasePrice { get; set; }
 
         // Service-specific
-         [Display(Name = "Service Duration")]
+        [Display(Name = "Service Duration")]
         [Range(0, double.MaxValue, ErrorMessage = "Duration must be positive")]
         public decimal? ServiceDuration { get; set; }
 

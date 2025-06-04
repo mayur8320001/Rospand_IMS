@@ -14,12 +14,13 @@ namespace Rospand_IMS.Models
     {
         public int? VendorId { get; set; }
         public int? PurchaseOrderId { get; set; }
+        public int? WarehouseId { get; set; } // New field for warehouse selection
         public List<SelectListItem> Vendors { get; set; }
         public List<SelectListItem> PurchaseOrders { get; set; }
+        public List<SelectListItem> Warehouses { get; set; } // New dropdown for warehouses
         public PurchaseOrder SelectedPurchaseOrder { get; set; }
-        public Dictionary<int, int> ReceivedQuantities { get; set; } // Key: ItemId, Value: Qty
+        public Dictionary<int, int> ReceivedQuantities { get; set; }
     }
-
     public class ReceiveItemViewModel
     {
         public int ItemId { get; set; }

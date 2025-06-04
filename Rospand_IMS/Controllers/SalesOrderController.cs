@@ -18,214 +18,54 @@ namespace Rospand_IMS.Controllers
             _context = context;
         }
 
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Confirm(int id, bool createPurchaseForMissingItems = false)
+        // Generate unique SO number
+        private string GenerateSONumber()
         {
-            var salesOrder = await _context.SalesOrders
-                .Include(so => so.Items)
-                .ThenInclude(i => i.Product)
-                .Include(so => so.Customer)
-                .FirstOrDefaultAsync(so => so.Id == id);
-
-            if (salesOrder == null)
-            {
-                return NotFound();
-            }
-
-            if (salesOrder.Status != SalesOrderStatus.Draft)
-            {
-                return BadRequest("Sales order must be in Draft status to confirm.");
-            }
-
-            // Track inventory issues
-            var outOfStockItems = new List<SalesOrderItem>();
-            var insufficientStockItems = new List<(SalesOrderItem item, int available)>();
-
-            // Validate inventory availability
-            foreach (var item in salesOrder.Items)
-            {
-                var inventory = await _context.Inventories
-                    .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-
-                if (inventory == null)
-                {
-                    outOfStockItems.Add(item);
-                }
-                else if (inventory.QuantityAvailable < item.Quantity)
-                {
-                    insufficientStockItems.Add((item, inventory.QuantityAvailable));
-                }
-            }
-
-            // Handle missing/insufficient stock
-            if (outOfStockItems.Any() || insufficientStockItems.Any())
-            {
-                if (createPurchaseForMissingItems)
-                {
-                    return await CreatePurchaseOrderForMissingItems(salesOrder, outOfStockItems, insufficientStockItems);
-                }
-
-                // Return view showing stock issues with options
-                var viewModel = new ConfirmSalesOrderViewModel
-                {
-                    SalesOrderId = salesOrder.Id,
-                    SONumber = salesOrder.SONumber,
-                    CustomerName = salesOrder.Customer.CustomerDisplayName,
-                    OutOfStockItems = outOfStockItems.Select(i => new StockIssueItemViewModel
-                    {
-                        ProductId = i.ProductId,
-                        ProductName = i.Product.Name,
-                        Quantity = i.Quantity,
-                        Available = 0
-                    }).ToList(),
-                    InsufficientStockItems = insufficientStockItems.Select(i => new StockIssueItemViewModel
-                    {
-                        ProductId = i.item.ProductId,
-                        ProductName = i.item.Product.Name,
-                        Quantity = i.item.Quantity,
-                        Available = i.available
-                    }).ToList()
-                };
-
-                return View("StockIssues", viewModel);
-            }
-
-            // Proceed with confirmation if all items are available
-            using (var transaction = await _context.Database.BeginTransactionAsync())
-            {
-                try
-                {
-                    // Reserve stock
-                    foreach (var item in salesOrder.Items)
-                    {
-                        var inventory = await _context.Inventories
-                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-
-                        inventory.QuantityReserved += item.Quantity;
-                        inventory.LastUpdated = DateTime.UtcNow;
-                        _context.Update(inventory);
-
-                        // Record inventory transaction
-                        var transactionEntry = new InventoryTransaction
-                        {
-                            ProductId = item.ProductId,
-                            WarehouseId = inventory.WarehouseId,
-                          //  TransactionType = InventoryTransactionType.SaleReservation,
-                            Quantity = item.Quantity,
-                            TransactionDate = DateTime.UtcNow,
-                            SalesOrderId = salesOrder.Id,
-                            ReferenceNumber = salesOrder.SONumber,
-                            Notes = $"Reserved for sales order {salesOrder.SONumber}"
-                        };
-                        _context.InventoryTransactions.Add(transactionEntry);
-                    }
-
-                    // Update sales order status
-                    salesOrder.Status = SalesOrderStatus.Confirmed;
-                    salesOrder.ModifiedDate = DateTime.UtcNow;
-                    _context.Update(salesOrder);
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    return StatusCode(500, "An error occurred while confirming the sales order.");
-                }
-            }
-
-            return RedirectToAction(nameof(Details), new { id = salesOrder.Id });
-        }
-        private string GeneratePONumber()
-        {
-            var lastPO = _context.PurchaseOrders
-                .OrderByDescending(po => po.Id)
+            var prefix = "SO";
+            var today = DateTime.Today.ToString("yyMMdd");
+            var lastNumber = _context.SalesOrders
+                .Where(so => so.SONumber.StartsWith(prefix + today))
+                .OrderByDescending(so => so.SONumber)
+                .Select(so => so.SONumber)
                 .FirstOrDefault();
 
-            int lastNumber = 0;
-            if (lastPO != null && lastPO.PONumber != null)
+            var nextNum = 1;
+            if (!string.IsNullOrEmpty(lastNumber))
             {
-                var numberPart = lastPO.PONumber.Replace("PO-", "");
-                if (int.TryParse(numberPart, out lastNumber))
+                var numPart = lastNumber.Substring(prefix.Length + 6);
+                if (int.TryParse(numPart, out var lastNum))
                 {
-                    lastNumber = int.Parse(numberPart);
+                    nextNum = lastNum + 1;
                 }
             }
 
-            return $"PO-{(lastNumber + 1).ToString("D6")}";
+            return $"{prefix}{today}{nextNum:D4}";
         }
-        private async Task<IActionResult> CreatePurchaseOrderForMissingItems(
-       SalesOrder salesOrder,
-       List<SalesOrderItem> outOfStockItems,
-       List<(SalesOrderItem item, int available)> insufficientStockItems)
+
+        // Generate unique outward number
+        private string GenerateOutwardNumber()
         {
-            // Verify currency exists
-            var currency = await _context.Currencies.FindAsync(salesOrder.CurrencyId);
-            /*if (currency == null)
-            {
-                // Fall back to default currency if specified currency doesn't exist
-                currency = await _context.Currencies.FirstOrDefaultAsync(c => c.IsDefault);
-                if (currency == null)
-                {
-                    return BadRequest("No valid currency available for purchase order");
-                }
-            }*/
+            var prefix = "OUT";
+            var today = DateTime.Today.ToString("yyMMdd");
+            var lastNumber = _context.OutwardEntries
+                .Where(oe => oe.OutwardNumber.StartsWith(prefix + today))
+                .OrderByDescending(oe => oe.OutwardNumber)
+                .Select(oe => oe.OutwardNumber)
+                .FirstOrDefault();
 
-            var purchaseOrder = new PurchaseOrder
+            var nextNum = 1;
+            if (!string.IsNullOrEmpty(lastNumber))
             {
-                PONumber = GeneratePONumber(),
-                OrderDate = DateTime.UtcNow,
-                ExpectedDeliveryDate = DateTime.UtcNow.AddDays(7),
-                Status = PurchaseOrderStatus.Draft,
-                Notes = $"Auto-generated for sales order {salesOrder.SONumber}",
-                CreatedDate = DateTime.UtcNow,
-                CurrencyId = currency.Id,
-               // VendorId = await DetermineDefaultVendorId() // You'll need to implement this
-            };
-
-            // Add items that are completely out of stock
-            foreach (var item in outOfStockItems)
-            {
-                purchaseOrder.Items.Add(new PurchaseOrderItem
+                var numPart = lastNumber.Substring(prefix.Length + 6);
+                if (int.TryParse(numPart, out var lastNum))
                 {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.Product.PurchasePrice ?? 0,
-                    Notes = $"Required for sales order {salesOrder.SONumber}"
-                });
-            }
-
-            // Add items with insufficient stock
-            foreach (var (item, available) in insufficientStockItems)
-            {
-                var neededQuantity = item.Quantity - available;
-                if (neededQuantity > 0)
-                {
-                    purchaseOrder.Items.Add(new PurchaseOrderItem
-                    {
-                        ProductId = item.ProductId,
-                        Quantity = neededQuantity,
-                        UnitPrice = item.Product.PurchasePrice ?? 0,
-                        Notes = $"Required for sales order {salesOrder.SONumber}"
-                    });
+                    nextNum = lastNum + 1;
                 }
             }
 
-            _context.PurchaseOrders.Add(purchaseOrder);
-            await _context.SaveChangesAsync();
-
-            // Update sales order with backorder status
-           // salesOrder.Status = SalesOrderStatus.Backordered;
-            salesOrder.ModifiedDate = DateTime.UtcNow;
-            _context.Update(salesOrder);
-            await _context.SaveChangesAsync();
-
-            // Redirect to purchase order for completion
-            return RedirectToAction("Edit", "PurchaseOrder", new { id = purchaseOrder.Id });
+            return $"{prefix}{today}{nextNum:D4}";
         }
+
         // GET: SalesOrder
         public async Task<IActionResult> Index(SalesOrderStatus? status, string searchString)
         {
@@ -252,7 +92,6 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: SalesOrder/Create
-
         public async Task<IActionResult> Create()
         {
             var viewModel = new SalesOrderCreateViewModel
@@ -265,66 +104,71 @@ namespace Rospand_IMS.Controllers
                     .OrderBy(c => c.CustomerDisplayName)
                     .ToListAsync(),
                 Currencies = await _context.Currencies.ToListAsync(),
-                AvailableProducts = await _context.Products
-                    .Include(p => p.Category)
-                  
-                    .Select(p => new InventoryViewModel
+                AvailableProducts = await _context.Inventories
+                    .Include(i => i.Product)
+                    .ThenInclude(p => p.Category)
+                    .Select(i => new InventoryViewModel
                     {
-                        ProductId = p.Id,
-                        ProductName = p.Name,
-                        ProductSKU = p.SKU,
-                        CategoryName = p.Category != null ? p.Category.Name : "No Category",
-                        SalesPrice = p.SalesPrice ?? 0,
-                        // Include inventory information if needed
-                        QuantityAvailable = _context.Inventories
-                            .Where(i => i.ProductId == p.Id)
-                            .Sum(i => i.QuantityOnHand - i.QuantityReserved)
+                        ProductId = i.ProductId,
+                        ProductName = i.Product.Name,
+                        ProductSKU = i.Product.SKU,
+                        CategoryName = i.Product.Category != null ? i.Product.Category.Name : "No Category",
+                        SalesPrice = i.Product.SalesPrice ?? 0,
+                        QuantityAvailable = i.QuantityOnHand - i.QuantityReserved,
+                        WarehouseId = i.WarehouseId,
+                        WarehouseName = i.Warehouse.Name
                     })
-                    .Where(p => p.QuantityAvailable > 0)
-                    .OrderBy(p => p.ProductName)
+                    .Where(i => i.QuantityAvailable > 0)
+                    .OrderBy(i => i.ProductName)
                     .ToListAsync(),
-                Items = new List<SalesOrderItemViewModel>() // Initialize empty list
+                Items = new List<SalesOrderItemViewModel>()
             };
 
             return View(viewModel);
         }
 
         // POST: SalesOrder/Create
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SalesOrderCreateViewModel viewModel)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Validate inventory availability
-                foreach (var item in viewModel.Items)
+                await PopulateViewModelDropdowns(viewModel);
+                return View(viewModel);
+            }
+
+            // Validate inventory and product availability
+            foreach (var item in viewModel.Items)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null)
                 {
-                    var product = await _context.Products.FindAsync(item.ProductId);
-                    if (product == null)
-                    {
-                        ModelState.AddModelError("", $"Product {item.ProductName} (ID: {item.ProductId}) no longer exists");
-                        await PopulateViewModelDropdowns(viewModel);
-                        return View(viewModel);
-                    }
-
-                    var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-
-                    if (inventory == null || (inventory.QuantityOnHand - inventory.QuantityReserved) < item.Quantity)
-                    {
-                        ModelState.AddModelError($"Items[{viewModel.Items.IndexOf(item)}].Quantity",
-                            $"Insufficient stock for product {item.ProductName}. Available: {(inventory != null ? inventory.QuantityOnHand - inventory.QuantityReserved : 0)}");
-                    }
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    // Repopulate dropdowns
+                    ModelState.AddModelError("", $"Product {item.ProductName} (ID: {item.ProductId}) no longer exists");
                     await PopulateViewModelDropdowns(viewModel);
                     return View(viewModel);
                 }
 
+                var inventory = await _context.Inventories
+                    .Where(i => i.ProductId == item.ProductId)
+                    .SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
+
+                if (inventory < item.Quantity)
+                {
+                    ModelState.AddModelError($"Items[{viewModel.Items.IndexOf(item)}].Quantity",
+                        $"Insufficient stock for {item.ProductName}. Available: {inventory}");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await PopulateViewModelDropdowns(viewModel);
+                return View(viewModel);
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
                 var salesOrder = new SalesOrder
                 {
                     SONumber = viewModel.SONumber,
@@ -334,72 +178,487 @@ namespace Rospand_IMS.Controllers
                     Status = SalesOrderStatus.Draft,
                     CurrencyId = viewModel.CurrencyId,
                     Notes = viewModel.Notes,
-                    CreatedDate = DateTime.Now
+                    CreatedDate = DateTime.UtcNow
                 };
 
                 foreach (var item in viewModel.Items)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
-                    if (product != null)
+                    salesOrder.Items.Add(new SalesOrderItem
                     {
-                        salesOrder.Items.Add(new SalesOrderItem
-                        {
-                            ProductId = item.ProductId,
-                            Quantity = item.Quantity,
-                            UnitPrice = item.UnitPrice > 0 ? item.UnitPrice : product.SalesPrice ?? 0,
-                            DiscountPercent = item.DiscountPercent,
-                            TaxRate = item.TaxRate,
-                            Notes = item.Notes,
-                            LineTotal = CalculateLineTotal(item.Quantity, item.UnitPrice, item.DiscountPercent, item.TaxRate)
-                        });
-                    }
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice > 0 ? item.UnitPrice : product.SalesPrice ?? 0,
+                        DiscountPercent = item.DiscountPercent,
+                        TaxRate = item.TaxRate,
+                        Notes = item.Notes,
+                        LineTotal = CalculateLineTotal(item.Quantity, item.UnitPrice > 0 ? item.UnitPrice : product.SalesPrice ?? 0, item.DiscountPercent, item.TaxRate)
+                    });
                 }
 
                 CalculateOrderTotals(salesOrder);
-
-                // Add sales order to context
-                _context.Add(salesOrder);
+                _context.SalesOrders.Add(salesOrder);
                 await _context.SaveChangesAsync();
 
-                // Update inventory and create transaction
+                // Reserve inventory and create transaction
                 foreach (var item in salesOrder.Items)
                 {
                     var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.QuantityOnHand - i.QuantityReserved >= item.Quantity);
+
                     if (inventory != null)
                     {
                         inventory.QuantityReserved += item.Quantity;
-                        inventory.LastUpdated = DateTime.Now;
+                        inventory.LastUpdated = DateTime.UtcNow;
                         _context.Update(inventory);
 
-                        // Record inventory transaction
-                        var transaction = new InventoryTransaction
+                        var transactionEntry = new InventoryTransaction
                         {
                             ProductId = item.ProductId,
                             WarehouseId = inventory.WarehouseId,
-                            TransactionType = InventoryTransactionType.Sale,
+                            TransactionType = InventoryTransactionType.Reservation,
                             Quantity = item.Quantity,
                             TransactionDate = DateTime.UtcNow,
                             SalesOrderId = salesOrder.Id,
                             ReferenceNumber = salesOrder.SONumber,
-                            Notes = $"Sale order {salesOrder.SONumber}",
-
+                            Notes = $"Reserved for sales order {salesOrder.SONumber}",
+                            PreviousQuantity = inventory.QuantityOnHand,
+                            NewQuantity = inventory.QuantityOnHand
                         };
-                        _context.InventoryTransactions.Add(transaction);
+                        _context.InventoryTransactions.Add(transactionEntry);
                     }
                 }
 
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return RedirectToAction(nameof(Details), new { id = salesOrder.Id });
             }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", $"Error creating sales order: {ex.Message}");
+                await PopulateViewModelDropdowns(viewModel);
+                return View(viewModel);
+            }
+        }
 
-            // Repopulate dropdowns if model is invalid
-            await PopulateViewModelDropdowns(viewModel);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Confirm(int id)
+        {
+            var salesOrder = await _context.SalesOrders
+                .Include(so => so.Items)
+                .ThenInclude(i => i.Product)
+                .Include(so => so.Customer)
+                .FirstOrDefaultAsync(so => so.Id == id);
+
+            if (salesOrder == null)
+            {
+                return NotFound();
+            }
+
+            if (salesOrder.Status != SalesOrderStatus.Draft)
+            {
+                return BadRequest("Sales order must be in Draft status to confirm.");
+            }
+
+            var outOfStockItems = new List<SalesOrderItem>();
+            var insufficientStockItems = new List<(SalesOrderItem item, int available)>();
+
+            foreach (var item in salesOrder.Items)
+            {
+                var inventory = await _context.Inventories
+                    .Where(i => i.ProductId == item.ProductId)
+                    .SumAsync(i => i.QuantityOnHand - i.QuantityReserved);
+
+                if (inventory == 0)
+                {
+                    outOfStockItems.Add(item);
+                }
+                else if (inventory < item.Quantity)
+                {
+                    insufficientStockItems.Add((item, inventory));
+                }
+            }
+
+            if (outOfStockItems.Any() || insufficientStockItems.Any())
+            {
+                var viewModel = new ConfirmSalesOrderViewModel
+                {
+                    SalesOrderId = salesOrder.Id,
+                    SONumber = salesOrder.SONumber,
+                    CustomerName = salesOrder.Customer.CustomerDisplayName,
+                    OutOfStockItems = outOfStockItems.Select(i => new StockIssueItemViewModel
+                    {
+                        ProductId = i.ProductId,
+                        ProductName = i.Product.Name,
+                        Quantity = i.Quantity,
+                        Available = 0
+                    }).ToList(),
+                    InsufficientStockItems = insufficientStockItems.Select(i => new StockIssueItemViewModel
+                    {
+                        ProductId = i.item.ProductId,
+                        ProductName = i.item.Product.Name,
+                        Quantity = i.item.Quantity,
+                        Available = i.available
+                    }).ToList()
+                };
+
+                return View("StockIssues", viewModel);
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var item in salesOrder.Items)
+                {
+                    var inventory = await _context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.QuantityOnHand - i.QuantityReserved >= item.Quantity);
+
+                    if (inventory != null)
+                    {
+                        inventory.QuantityReserved += item.Quantity;
+                        inventory.LastUpdated = DateTime.UtcNow;
+                        _context.Update(inventory);
+
+                        var transactionEntry = new InventoryTransaction
+                        {
+                            ProductId = item.ProductId,
+                            WarehouseId = inventory.WarehouseId,
+                            TransactionType = InventoryTransactionType.Reservation,
+                            Quantity = item.Quantity,
+                            TransactionDate = DateTime.UtcNow,
+                            SalesOrderId = salesOrder.Id,
+                            ReferenceNumber = salesOrder.SONumber,
+                            Notes = $"Confirmed reservation for sales order {salesOrder.SONumber}"
+                        };
+                        _context.InventoryTransactions.Add(transactionEntry);
+                    }
+                }
+
+                salesOrder.Status = SalesOrderStatus.Confirmed;
+                salesOrder.ModifiedDate = DateTime.UtcNow;
+                _context.Update(salesOrder);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Details), new { id = salesOrder.Id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Error confirming sales order: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateOutwardEntry(int salesOrderId)
+        {
+            var salesOrder = await _context.SalesOrders
+                .Include(so => so.Items)
+                .ThenInclude(i => i.Product)
+                .Include(so => so.Customer)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Items)
+                .FirstOrDefaultAsync(so => so.Id == salesOrderId);
+
+            if (salesOrder == null)
+            {
+                return NotFound("Sales order not found.");
+            }
+
+            if (salesOrder.Status != SalesOrderStatus.Confirmed && salesOrder.Status != SalesOrderStatus.PartiallyShipped)
+            {
+                return BadRequest("Sales order must be in Confirmed or Partially Shipped status to create an outward entry.");
+            }
+
+            var viewModel = new OutwardEntryCreateViewModel
+            {
+                SalesOrderId = salesOrderId,
+                SONumber = salesOrder.SONumber ?? throw new Exception("Sales order number is missing."),
+                CustomerDisplayName = salesOrder.Customer?.CustomerDisplayName ?? throw new Exception("Customer name is missing."),
+                OutwardNumber = GenerateOutwardNumber(),
+                OutwardDate = DateTime.Today,
+                WarehouseId = 0, // Default to no selection
+                Warehouses = new SelectList(await _context.Warehouses
+                    .Where(w => w.IsActive)
+                    .OrderBy(w => w.Name)
+                    .ToListAsync(), "Id", "Name"),
+                Items = new List<OutwardEntryItemViewModel>()
+            };
+
+            var dispatchedQuantities = salesOrder.OutwardEntries
+                .SelectMany(oe => oe.Items)
+                .GroupBy(oi => oi.ProductId)
+                .ToDictionary(g => g.Key, g => g.Sum(oi => oi.Quantity));
+
+            var productIds = salesOrder.Items.Select(i => i.ProductId).ToList();
+            var inventories = await _context.Inventories
+                .Where(i => productIds.Contains(i.ProductId))
+                .GroupBy(i => i.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    QuantityAvailable = g.Sum(i => i.QuantityOnHand - i.QuantityReserved)
+                })
+                .ToListAsync();
+
+            foreach (var item in salesOrder.Items)
+            {
+                var alreadyDispatched = dispatchedQuantities.ContainsKey(item.ProductId)
+                    ? dispatchedQuantities[item.ProductId]
+                    : 0;
+
+                var remainingToDispatch = item.Quantity - alreadyDispatched;
+                var inventory = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
+                var availableToDispatch = Math.Min(remainingToDispatch, inventory?.QuantityAvailable ?? 0);
+
+                viewModel.Items.Add(new OutwardEntryItemViewModel
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.Product.Name,
+                    ProductSKU = item.Product.SKU,
+                    QuantityOrdered = item.Quantity,
+                    QuantityDispatched = alreadyDispatched,
+                    QuantityAvailable = availableToDispatch,
+                    Quantity = availableToDispatch > 0 ? availableToDispatch : 0
+                });
+            }
+
             return View(viewModel);
         }
 
-        // Update PopulateViewModelDropdowns to match
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                viewModel.Warehouses = await GetWarehousesSelectList();
+                return View(viewModel);
+            }
+
+            var salesOrder = await _context.SalesOrders
+                .Include(so => so.Items)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Items)
+                .FirstOrDefaultAsync(so => so.Id == viewModel.SalesOrderId);
+
+            if (salesOrder == null)
+            {
+                ModelState.AddModelError("", "Sales order not found.");
+                viewModel.Warehouses = await GetWarehousesSelectList();
+                return View(viewModel);
+            }
+
+            // Pre-validation
+            foreach (var item in viewModel.Items.Where(i => i.Quantity > 0))
+            {
+                var orderedQty = salesOrder.Items.First(i => i.ProductId == item.ProductId).Quantity;
+                var alreadyDispatched = salesOrder.OutwardEntries
+                    .SelectMany(oe => oe.Items)
+                    .Where(oi => oi.ProductId == item.ProductId)
+                    .Sum(oi => oi.Quantity);
+
+                var remainingToDispatch = orderedQty - alreadyDispatched;
+                if (item.Quantity > remainingToDispatch)
+                {
+                    ModelState.AddModelError("",
+                        $"Cannot dispatch {item.Quantity} of {item.ProductName}. Only {remainingToDispatch} remaining.");
+                    viewModel.Warehouses = await GetWarehousesSelectList();
+                    return View(viewModel);
+                }
+
+                var inventory = await _context.Inventories
+                    .FirstOrDefaultAsync(i => i.WarehouseId == viewModel.WarehouseId && i.ProductId == item.ProductId);
+
+                if (inventory == null || inventory.QuantityOnHand < item.Quantity)
+                {
+                    ModelState.AddModelError("",
+                        $"Insufficient stock for {item.ProductName} in warehouse. Available: {inventory?.QuantityOnHand ?? 0}");
+                    viewModel.Warehouses = await GetWarehousesSelectList();
+                    return View(viewModel);
+                }
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var outwardEntry = new OutwardEntry
+                {
+                    OutwardNumber = viewModel.OutwardNumber,
+                    OutwardDate = viewModel.OutwardDate,
+                    SalesOrderId = viewModel.SalesOrderId,
+                    WarehouseId = viewModel.WarehouseId,
+                    Notes = viewModel.Notes,
+                    Status = OutwardEntryStatus.Processed,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "System"
+                };
+
+                _context.OutwardEntries.Add(outwardEntry);
+                await _context.SaveChangesAsync(); // Save to get the ID
+
+                foreach (var item in viewModel.Items.Where(i => i.Quantity > 0))
+                {
+                    var inventory = await _context.Inventories
+                        .FirstOrDefaultAsync(i => i.WarehouseId == viewModel.WarehouseId && i.ProductId == item.ProductId);
+
+                    inventory.QuantityOnHand -= item.Quantity;
+                    inventory.QuantityReserved -= item.Quantity;
+                    inventory.LastUpdated = DateTime.UtcNow;
+                    _context.Update(inventory);
+
+                    var outwardItem = new OutwardEntryItem
+                    {
+                        OutwardEntryId = outwardEntry.Id,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Notes = item.Notes
+                    };
+                    _context.OutwardEntryItems.Add(outwardItem);
+
+                    var transactionEntry = new InventoryTransaction
+                    {
+                        ProductId = item.ProductId,
+                        WarehouseId = viewModel.WarehouseId,
+                        TransactionType = InventoryTransactionType.Outward,
+                        Quantity = item.Quantity,
+                        TransactionDate = DateTime.UtcNow,
+                        OutwardEntryId = outwardEntry.Id,
+                        SalesOrderId = salesOrder.Id,
+                        ReferenceNumber = outwardEntry.OutwardNumber,
+                        Notes = $"Outward for sales order {salesOrder.SONumber}",
+                        PreviousQuantity = inventory.QuantityOnHand + item.Quantity,
+                        NewQuantity = inventory.QuantityOnHand
+                    };
+                    _context.InventoryTransactions.Add(transactionEntry);
+                }
+
+                await UpdateSalesOrderStatus(salesOrder.Id);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Details), new { id = viewModel.SalesOrderId });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                var errorMessage = $"Error creating outward entry: {ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    errorMessage += $"\nInner Exception: {ex.InnerException.Message}";
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        errorMessage += $"\nInner Inner Exception: {ex.InnerException.InnerException.Message}";
+                    }
+                }
+                ModelState.AddModelError("", errorMessage);
+                viewModel.Warehouses = await GetWarehousesSelectList();
+                return View(viewModel);
+            }
+        }
+
+        // Helper method to get warehouse inventory (for AJAX call)
+        [HttpGet]
+        public async Task<IActionResult> GetWarehouseInventory(int warehouseId, int[] productIds)
+        {
+            var inventory = await _context.Inventories
+                .Where(i => i.WarehouseId == warehouseId && productIds.Contains(i.ProductId))
+                .Select(i => new
+                {
+                    productId = i.ProductId,
+                    quantityAvailable = i.QuantityOnHand - i.QuantityReserved
+                })
+                .ToListAsync();
+
+            return Json(inventory);
+        }
+
+        // GET: SalesOrder/InventoryOverview
+        [HttpGet]
+        public async Task<IActionResult> InventoryOverview()
+        {
+            var inventoryView = await _context.Inventories
+                .Include(i => i.Product)
+                .ThenInclude(p => p.Category)
+                .Include(i => i.Warehouse)
+                .Select(i => new InventoryViewModel
+                {
+                    Id = i.Id,
+                    ProductId = i.ProductId,
+                    ProductName = i.Product.Name,
+                    ProductSKU = i.Product.SKU,
+                    CategoryName = i.Product.Category != null ? i.Product.Category.Name : "No Category",
+                    WarehouseId = i.WarehouseId,
+                    WarehouseName = i.Warehouse.Name,
+                    QuantityOnHand = i.QuantityOnHand,
+                    QuantityReserved = i.QuantityReserved,
+                    QuantityAvailable = i.QuantityOnHand - i.QuantityReserved,
+                    LastUpdated = i.LastUpdated,
+                    PurchasePrice = i.Product.PurchasePrice ?? 0,
+                    SalesPrice = i.Product.SalesPrice ?? 0,
+                    InventoryValue = (i.QuantityOnHand - i.QuantityReserved) * (i.Product.PurchasePrice ?? 0),
+                    PotentialSalesValue = (i.QuantityOnHand - i.QuantityReserved) * (i.Product.SalesPrice ?? 0)
+                })
+                .OrderBy(i => i.ProductName)
+                .ToListAsync();
+
+            return View(inventoryView);
+        }
+
+        // GET: SalesOrder/Details
+        public async Task<IActionResult> Details(int id)
+        {
+            var salesOrder = await _context.SalesOrders
+                .Include(so => so.Customer)
+                .Include(so => so.Currency)
+                .Include(so => so.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Items)
+                        .ThenInclude(oi => oi.Product)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Warehouse)
+                .FirstOrDefaultAsync(so => so.Id == id);
+
+            if (salesOrder == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new SalesOrderDetailsViewModel
+            {
+                SalesOrder = salesOrder,
+                TotalOrdered = salesOrder.Items.Sum(i => i.Quantity),
+                TotalDispatched = salesOrder.OutwardEntries
+                    .SelectMany(oe => oe.Items)
+                    .Sum(oi => oi.Quantity),
+                RemainingToDispatch = salesOrder.Items.Sum(i => i.Quantity) -
+                    salesOrder.OutwardEntries.SelectMany(oe => oe.Items).Sum(oi => oi.Quantity)
+            };
+
+            return View(viewModel);
+        }
+
+        // Helper methods
+        private decimal CalculateLineTotal(int quantity, decimal unitPrice, decimal discountPercent, decimal taxRate)
+        {
+            decimal discountedPrice = unitPrice * (1 - discountPercent / 100);
+            decimal subtotal = quantity * discountedPrice;
+            decimal tax = subtotal * (taxRate / 100);
+            return subtotal + tax;
+        }
+
+        private void CalculateOrderTotals(SalesOrder salesOrder)
+        {
+            salesOrder.SubTotal = salesOrder.Items.Sum(i => i.Quantity * i.UnitPrice * (1 - i.DiscountPercent / 100));
+            salesOrder.TaxAmount = salesOrder.Items.Sum(i => i.Quantity * i.UnitPrice * (1 - i.DiscountPercent / 100) * (i.TaxRate / 100));
+            salesOrder.TotalAmount = salesOrder.SubTotal + salesOrder.TaxAmount;
+        }
+
         private async Task PopulateViewModelDropdowns(SalesOrderCreateViewModel viewModel)
         {
             viewModel.Customers = await _context.Customers
@@ -420,214 +679,46 @@ namespace Rospand_IMS.Controllers
                     WarehouseName = i.Warehouse.Name,
                     QuantityOnHand = i.QuantityOnHand,
                     QuantityReserved = i.QuantityReserved,
-                    QuantityAvailable = i.QuantityOnHand - i.QuantityReserved, // Compute in projection
+                    QuantityAvailable = i.QuantityOnHand - i.QuantityReserved,
                     PurchasePrice = i.Product.PurchasePrice ?? 0,
                     SalesPrice = i.Product.SalesPrice ?? 0
                 })
-                .Where(i => i.QuantityOnHand - i.QuantityReserved > 0) // Use database fields
+                .Where(i => i.QuantityAvailable > 0)
                 .OrderBy(i => i.ProductName)
                 .ToListAsync();
         }
 
-        // GET: SalesOrder/Details/5
-        public async Task<IActionResult> Details(int id)
+        private async Task UpdateSalesOrderStatus(int salesOrderId)
         {
             var salesOrder = await _context.SalesOrders
-                .Include(so => so.Customer)
-                .Include(so => so.Currency)
                 .Include(so => so.Items)
-                .ThenInclude(i => i.Product)
-                .FirstOrDefaultAsync(so => so.Id == id);
-
-            if (salesOrder == null)
-            {
-                return NotFound();
-            }
-
-            return View(salesOrder);
-        }
-
-        // Helper method to calculate line total
-        private decimal CalculateLineTotal(int quantity, decimal unitPrice, decimal discountPercent, decimal taxRate)
-        {
-            decimal discountedPrice = unitPrice * (1 - discountPercent / 100);
-            decimal subtotal = quantity * discountedPrice;
-            decimal tax = subtotal * (taxRate / 100);
-            return subtotal + tax;
-        }
-
-        // Helper method to calculate order totals
-        private void CalculateOrderTotals(SalesOrder salesOrder)
-        {
-            salesOrder.SubTotal = salesOrder.Items.Sum(i => i.Quantity * i.UnitPrice * (1 - i.DiscountPercent / 100));
-            salesOrder.TaxAmount = salesOrder.Items.Sum(i => i.Quantity * i.UnitPrice * (1 - i.DiscountPercent / 100) * (i.TaxRate / 100));
-            salesOrder.TotalAmount = salesOrder.SubTotal + salesOrder.TaxAmount;
-        }
-
-        // Helper method to generate unique SO number
-        private string GenerateSONumber()
-        {
-            // Simple implementation; consider a more robust method in production
-            return $"SO-{DateTime.Now:yyyyMM}";
-        }
-
-        // GET: SalesOrder/CreateOutwardEntry/5
-        public async Task<IActionResult> CreateOutwardEntry(int salesOrderId)
-        {
-            var salesOrder = await _context.SalesOrders
-                .Include(so => so.Customer)
-                .Include(so => so.Items)
-                .ThenInclude(i => i.Product)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Items)
                 .FirstOrDefaultAsync(so => so.Id == salesOrderId);
 
-            if (salesOrder == null)
+            if (salesOrder != null)
             {
-                return NotFound();
+                var totalOrdered = salesOrder.Items.Sum(i => i.Quantity);
+                var totalDispatched = salesOrder.OutwardEntries
+                    .SelectMany(oe => oe.Items)
+                    .Sum(oi => oi.Quantity);
+
+                salesOrder.Status = totalDispatched >= totalOrdered
+                    ? SalesOrderStatus.Shipped
+                    : totalDispatched > 0
+                        ? SalesOrderStatus.PartiallyShipped
+                        : SalesOrderStatus.Confirmed;
+
+                salesOrder.ModifiedDate = DateTime.UtcNow;
+                _context.Update(salesOrder);
             }
-
-            if (salesOrder.Status != SalesOrderStatus.Confirmed)
-            {
-                return BadRequest("Sales order must be in Confirmed status to create an outward entry.");
-            }
-
-            var viewModel = new OutwardEntryCreateViewModel
-            {
-                SalesOrderId = salesOrder.Id,
-                SONumber = salesOrder.SONumber,
-                CustomerDisplayName = salesOrder.Customer.CustomerDisplayName,
-                OutwardNumber = GenerateOutwardNumber(),
-                OutwardDate = DateTime.UtcNow,
-                Warehouses = new SelectList(await _context.Warehouses.Where(w => w.IsActive).ToListAsync(), "Id", "Name"),
-                Items = salesOrder.Items.Select(i => new OutwardEntryItemViewModel
-                {
-                    ProductId = i.ProductId,
-                    ProductName = i.Product.Name,
-                    ProductSKU = i.Product.SKU,
-                    QuantityOrdered = i.Quantity,
-                    QuantityAvailable = _context.Inventories
-                        .Where(inv => inv.ProductId == i.ProductId)
-                        .Select(inv => inv.QuantityAvailable)
-                        .FirstOrDefault(),
-                    Quantity = i.Quantity, // Default to ordered quantity
-                    Notes = ""
-                }).ToList()
-            };
-
-            return View(viewModel);
         }
 
-        // POST: SalesOrder/CreateOutwardEntry
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel viewModel)
+        private async Task<SelectList> GetWarehousesSelectList()
         {
-            if (ModelState.IsValid)
-            {
-                // Validate inventory availability
-                foreach (var item in viewModel.Items)
-                {
-                    var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == viewModel.WarehouseId);
-
-                    if (inventory == null || inventory.QuantityAvailable < item.Quantity)
-                    {
-                        ModelState.AddModelError($"Items[{viewModel.Items.IndexOf(item)}].Quantity",
-                            $"Insufficient stock for product {item.ProductName} in warehouse. Available: {(inventory?.QuantityAvailable ?? 0)}");
-                    }
-
-                    if (item.Quantity > item.QuantityOrdered)
-                    {
-                        ModelState.AddModelError($"Items[{viewModel.Items.IndexOf(item)}].Quantity",
-                            $"Quantity cannot exceed ordered quantity ({item.QuantityOrdered}) for product {item.ProductName}.");
-                    }
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    viewModel.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.IsActive).ToListAsync(), "Id", "Name");
-                    return View(viewModel);
-                }
-
-                var outwardEntry = new OutwardEntry
-                {
-                    OutwardNumber = viewModel.OutwardNumber,
-                    SalesOrderId = viewModel.SalesOrderId,
-                    WarehouseId = viewModel.WarehouseId,
-                    OutwardDate = viewModel.OutwardDate,
-                    Notes = viewModel.Notes,
-                    CreatedBy = User.Identity?.Name,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                foreach (var item in viewModel.Items)
-                {
-                    outwardEntry.Items.Add(new OutwardEntryItem
-                    {
-                        ProductId = item.ProductId,
-                        Quantity = item.Quantity,
-                        Notes = item.Notes
-                    });
-                }
-
-                _context.Add(outwardEntry);
-                await _context.SaveChangesAsync();
-
-                // Update inventory and create transactions
-                foreach (var item in outwardEntry.Items)
-                {
-                    var inventory = await _context.Inventories
-                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == outwardEntry.WarehouseId);
-
-                    if (inventory != null)
-                    {
-                        inventory.QuantityOnHand -= item.Quantity;
-                        inventory.QuantityReserved -= item.Quantity;
-                        inventory.LastUpdated = DateTime.UtcNow;
-                      //  inventory.LastTransactionId = null; // Will be updated below
-                        _context.Update(inventory);
-
-                        var transaction = new InventoryTransaction
-                        {
-                            ProductId = item.ProductId,
-                            WarehouseId = outwardEntry.WarehouseId,
-                            TransactionType = InventoryTransactionType.TransferOut,
-                            Quantity = item.Quantity,
-                            TransactionDate = DateTime.UtcNow,
-                            SalesOrderId = outwardEntry.SalesOrderId,
-                            ReferenceNumber = outwardEntry.OutwardNumber,
-                            Notes = $"Outward entry for sales order {outwardEntry.SalesOrder.SONumber}",
-                         //   CreatedBy = User.Identity?.Name
-                        };
-                        _context.InventoryTransactions.Add(transaction);
-                        await _context.SaveChangesAsync(); // Save to get transaction ID
-                       // inventory.LastUpdated = transaction.Id;
-                        _context.Update(inventory);
-                    }
-                }
-
-                // Update sales order status to Shipped
-                var salesOrder = await _context.SalesOrders.FindAsync(outwardEntry.SalesOrderId);
-                if (salesOrder != null)
-                {
-                    salesOrder.Status = SalesOrderStatus.Shipped;
-                    salesOrder.ModifiedDate = DateTime.UtcNow;
-                    _context.Update(salesOrder);
-                }
-
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Details), new { id = outwardEntry.SalesOrderId });
-            }
-
-            viewModel.Warehouses = new SelectList(await _context.Warehouses.Where(w => w.IsActive).ToListAsync(), "Id", "Name");
-            return View(viewModel);
+            return new SelectList(await _context.Warehouses
+                .Where(w => w.IsActive)
+                .ToListAsync(), "Id", "Name");
         }
-
-        // Helper method to generate unique outward number
-        private string GenerateOutwardNumber()
-        {
-            return $"OUT-{DateTime.Now:yyyyMM}";
-        }
-
     }
 }

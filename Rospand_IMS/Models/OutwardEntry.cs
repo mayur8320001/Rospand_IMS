@@ -29,6 +29,8 @@ namespace Rospand_IMS.Models
         [StringLength(100)]
         public string CreatedBy { get; set; }
 
+        public OutwardEntryStatus Status { get; set; } = OutwardEntryStatus.Processed;
+
         public ICollection<OutwardEntryItem> Items { get; set; } = new List<OutwardEntryItem>();
     }
 
@@ -50,5 +52,13 @@ namespace Rospand_IMS.Models
 
         [StringLength(200)]
         public string Notes { get; set; }
+    }
+    public enum OutwardEntryStatus
+    {
+        Draft,
+        Processed,
+        Shipped,
+        Delivered,
+        Cancelled
     }
 }

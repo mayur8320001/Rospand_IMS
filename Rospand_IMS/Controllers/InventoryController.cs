@@ -24,10 +24,41 @@ namespace Rospand_IMS.Controllers
         {
             var inventory = await _context.Inventories
                 .Include(i => i.Product)
+                .ThenInclude(p => p.Category)
                 .Include(i => i.Warehouse)
                 .OrderBy(i => i.Product.Name)
                 .ThenBy(i => i.Warehouse.Name)
                 .ToListAsync();
+
+            // Calculate existing totals
+            ViewBag.TotalInventoryValue = inventory.Sum(i => (i.Product.PurchasePrice ?? 0) * i.QuantityOnHand);
+            ViewBag.TotalPotentialSalesValue = inventory.Sum(i => (i.Product.SalesPrice ?? 0) * i.QuantityOnHand);
+            ViewBag.TotalQuantityAvailable = inventory.Sum(i => i.QuantityOnHand - i.QuantityReserved);
+
+            // Calculate total sales value from sales orders
+            var salesOrderItems = await _context.SalesOrderItems
+                .Include(soi => soi.SalesOrder)
+                .Include(soi => soi.Product)
+                .Where(soi => soi.SalesOrder.Status == SalesOrderStatus.Confirmed ||
+                              soi.SalesOrder.Status == SalesOrderStatus.PartiallyShipped ||
+                              soi.SalesOrder.Status == SalesOrderStatus.Shipped ||
+                              soi.SalesOrder.Status == SalesOrderStatus.Delivered)
+                .GroupBy(soi => soi.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    TotalSalesValue = g.Sum(soi => soi.LineTotal)
+                })
+                .ToListAsync();
+
+            // Create a dictionary for quick lookup of sales value by product
+            var salesValueByProduct = salesOrderItems.ToDictionary(s => s.ProductId, s => s.TotalSalesValue);
+
+            // Calculate total sales value across all products
+            ViewBag.TotalSalesValue = salesOrderItems.Sum(s => s.TotalSalesValue);
+
+            // Add sales value to each inventory item for the view
+            ViewBag.SalesValueByProduct = salesValueByProduct;
 
             return View(inventory);
         }
@@ -88,18 +119,19 @@ namespace Rospand_IMS.Controllers
             return View(transactions);
         }
         [HttpGet]
-        public async Task<IActionResult> LowStock()
+        public async Task<IActionResult> LowStock(int? threshold)
         {
+            int lowStockThreshold = threshold ?? 5; // Allow dynamic threshold
             var inventory = await _context.Inventories
                 .Include(i => i.Product)
                 .Include(i => i.Warehouse)
-                .Where(i => (i.QuantityOnHand - i.QuantityReserved) < 5) // Calculate in query
-                .OrderBy(i => i.QuantityOnHand - i.QuantityReserved)     // Calculate in query
+                .Where(i => (i.QuantityOnHand - i.QuantityReserved) < lowStockThreshold)
+                .OrderBy(i => i.QuantityOnHand - i.QuantityReserved)
                 .ToListAsync();
 
+            ViewBag.Threshold = lowStockThreshold;
             return View(inventory);
         }
-
         [HttpGet]
         public async Task<IActionResult> Adjust()
         {
@@ -115,6 +147,9 @@ namespace Rospand_IMS.Controllers
 
             return View(model);
         }
+
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
