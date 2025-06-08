@@ -9,6 +9,7 @@ using Rospand_IMS.Models;
 
 namespace Rospand_IMS.Controllers
 {
+
     public class SalesOrderController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -392,9 +393,9 @@ namespace Rospand_IMS.Controllers
             return View(viewModel);
         }
 
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel viewModel)
+       [HttpPost]
+       [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel viewModel)
 {
     if (!ModelState.IsValid)
     {
@@ -548,7 +549,7 @@ public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel 
                 return NotFound();
             }
 
-            if (outwardEntry.Status != OutwardEntryStatus.Shipped)
+            if (outwardEntry.Status != OutwardEntryStatus.Processed)
             {
                 return BadRequest("Only shipped outward entries can be marked as delivered.");
             }
@@ -576,6 +577,10 @@ public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel 
 
             var outwardEntry = await _context.OutwardEntries
                 .Include(oe => oe.SalesOrder)
+                    .ThenInclude(so => so.OutwardEntries)
+                        .ThenInclude(oe => oe.Items)
+                .Include(oe => oe.SalesOrder)
+                    .ThenInclude(so => so.Items)
                 .FirstOrDefaultAsync(oe => oe.Id == viewModel.OutwardEntryId);
 
             if (outwardEntry == null)
@@ -583,28 +588,119 @@ public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel 
                 return NotFound();
             }
 
-            if (outwardEntry.Status != OutwardEntryStatus.Shipped)
+            if (outwardEntry.Status != OutwardEntryStatus.Processed)
             {
                 ModelState.AddModelError("", "Only shipped outward entries can be marked as delivered.");
                 return View(viewModel);
             }
 
-            outwardEntry.Status = OutwardEntryStatus.Delivered;
-            outwardEntry.DeliveryDate = viewModel.DeliveryDate;
-          //  outwardEntry.DeliveredBy = viewModel.DeliveredBy;
-        /* outwardEntry.Notes += string.IsNullOrEmpty(outwardEntry.Notes)
-                ? $"Delivered on {viewModel.DeliveryDate:d} by {viewModel.DeliveredBy}. {viewModel.Notes}"
-                : $"\nDelivered on {viewModel.DeliveryDate:d} by {viewModel.DeliveredBy}. {viewModel.Notes}";*/
-            outwardEntry.ModifiedDate = DateTime.Now;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Update outward entry status
+                outwardEntry.Status = OutwardEntryStatus.Delivered;
+                outwardEntry.DeliveryDate = viewModel.DeliveryDate;
+              //  outwardEntry.DeliveredBy = viewModel.DeliveredBy;
+                outwardEntry.ModifiedDate = DateTime.Now;
+/*
+                if (!string.IsNullOrEmpty(viewModel.Notes))
+                {
+                    outwardEntry.Notes = string.IsNullOrEmpty(outwardEntry.Notes)
+                        ? $"Delivered on {viewModel.DeliveryDate:d} by {viewModel.DeliveredBy}. {viewModel.Notes}"
+                        : $"{outwardEntry.Notes}\nDelivered on {viewModel.DeliveryDate:d} by {viewModel.DeliveredBy}. {viewModel.Notes}";
+                }*/
 
-            _context.Update(outwardEntry);
-            await _context.SaveChangesAsync();
+                _context.Update(outwardEntry);
 
-            return RedirectToAction(nameof(Details), new { id = outwardEntry.SalesOrderId });
+                // Check if all outward entries for this sales order are delivered
+                var salesOrder = outwardEntry.SalesOrder;
+                if (salesOrder != null && salesOrder.Status != SalesOrderStatus.Delivered)
+                {
+                    // Check if all outward entries are delivered
+                    bool allOutwardDelivered = salesOrder.OutwardEntries.All(oe => oe.Status == OutwardEntryStatus.Delivered);
+
+                    // Check if all items have been fully dispatched
+                    bool allItemsFullyDispatched = true;
+                    foreach (var item in salesOrder.Items)
+                    {
+                        var totalDispatched = salesOrder.OutwardEntries
+                            .SelectMany(oe => oe.Items)
+                            .Where(oi => oi.ProductId == item.ProductId)
+                            .Sum(oi => oi.Quantity);
+
+                        if (totalDispatched < item.Quantity)
+                        {
+                            allItemsFullyDispatched = false;
+                            break;
+                        }
+                    }
+
+                    if (allOutwardDelivered && allItemsFullyDispatched)
+                    {
+                        salesOrder.Status = SalesOrderStatus.Delivered;
+                        salesOrder.ModifiedDate = DateTime.Now;
+                        _context.Update(salesOrder);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Details), new { id = outwardEntry.SalesOrderId });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", $"Error marking as delivered: {ex.Message}");
+                return View(viewModel);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> OutwardDetails(int id)
+        {
+            var outwardEntry = await _context.OutwardEntries
+                .Include(oe => oe.SalesOrder)
+                .Include(oe => oe.Warehouse)
+                .Include(oe => oe.Items)
+                    .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(oe => oe.Id == id);
+
+            if (outwardEntry == null)
+            {
+                return NotFound();
+            }
+
+            return View(outwardEntry);
         }
 
 
+        private bool IsSalesOrderFullyDelivered(SalesOrder salesOrder)
+        {
+            if (!salesOrder.OutwardEntries.Any())
+                return false;
 
+            // Check if all outward entries are delivered
+            bool allOutwardDelivered = salesOrder.OutwardEntries.All(oe => oe.Status == OutwardEntryStatus.Delivered);
+
+            // Check if all items have been fully dispatched
+            bool allItemsFullyDispatched = true;
+            foreach (var item in salesOrder.Items)
+            {
+                var totalDispatched = salesOrder.OutwardEntries
+                    .SelectMany(oe => oe.Items)
+                    .Where(oi => oi.ProductId == item.ProductId)
+                    .Sum(oi => oi.Quantity);
+
+                if (totalDispatched < item.Quantity)
+                {
+                    allItemsFullyDispatched = false;
+                    break;
+                }
+            }
+
+            return allOutwardDelivered && allItemsFullyDispatched;
+        }
 
         // Helper method to get warehouse inventory (for AJAX call)
         [HttpGet]
@@ -744,26 +840,45 @@ public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel 
 
             if (salesOrder == null) return;
 
-            var allItemsDispatched = true;
-            foreach (var item in salesOrder.Items)
+            if (IsSalesOrderFullyDelivered(salesOrder))
             {
-                var totalDispatched = salesOrder.OutwardEntries
-                    .SelectMany(oe => oe.Items)
-                    .Where(oi => oi.ProductId == item.ProductId)
-                    .Sum(oi => oi.Quantity);
-
-                if (totalDispatched < item.Quantity)
+                salesOrder.Status = SalesOrderStatus.Delivered;
+            }
+            else
+            {
+                // Existing status update logic for other statuses
+                bool allItemsDispatched = true;
+                foreach (var item in salesOrder.Items)
                 {
-                    allItemsDispatched = false;
-                    break;
+                    var totalDispatched = salesOrder.OutwardEntries
+                        .SelectMany(oe => oe.Items)
+                        .Where(oi => oi.ProductId == item.ProductId)
+                        .Sum(oi => oi.Quantity);
+
+                    if (totalDispatched < item.Quantity)
+                    {
+                        allItemsDispatched = false;
+                        break;
+                    }
+                }
+
+                if (allItemsDispatched)
+                {
+                    salesOrder.Status = SalesOrderStatus.Shipped;
+                }
+                else if (salesOrder.OutwardEntries.Any())
+                {
+                    salesOrder.Status = SalesOrderStatus.PartiallyShipped;
+                }
+                else
+                {
+                    salesOrder.Status = SalesOrderStatus.Confirmed;
                 }
             }
 
-            salesOrder.Status = allItemsDispatched
-                ? SalesOrderStatus.Shipped
-                : SalesOrderStatus.PartiallyShipped;
-            salesOrder.ModifiedDate = DateTime.UtcNow;
+            salesOrder.ModifiedDate = DateTime.Now;
             _context.Update(salesOrder);
+            await _context.SaveChangesAsync();
         }
 
         private async Task<SelectList> GetWarehousesSelectList()

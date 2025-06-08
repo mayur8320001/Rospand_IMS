@@ -1,0 +1,204 @@
+﻿@model Rospand_IMS.Models.InvoiceIndexViewModel
+
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>Invoices</h3>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Invoice
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="mb-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="control-label">Search</label>
+                        <input type="text" name="searchString" value="@Model.SearchString" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">Status</label>
+                        <select name="status" asp-for="StatusFilter" class="form-control">
+                            <option value="">All Statuses</option>
+                            @foreach (var status in Enum.GetValues(typeof(InvoiceStatus)))
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">From Date</label>
+                        <input type="date" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">To Date</label>
+                        <input type="date" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-sync"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <a asp-action="Index"
+                               asp-route-sortOrder="@ViewData["DateSortParm"]"
+                               asp-route-searchString="@Model.SearchString"
+                               asp-route-status="@Model.StatusFilter"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                                Invoice Date
+                                @if (ViewData["DateSortParm"]?.ToString() == "date_desc")
+                                {
+                                    <i class="fas fa-sort-down"></i>
+                                }
+                                else if (ViewData["DateSortParm"]?.ToString() == "Date")
+                                {
+                                    <i class="fas fa-sort-up"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-sort"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Sales Order</th>
+                        <th>
+                            <a asp-action="Index"
+                               asp-route-sortOrder="@ViewData["StatusSortParm"]"
+                               asp-route-searchString="@Model.SearchString"
+                               asp-route-status="@Model.StatusFilter"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                                Status
+                                @if (ViewData["StatusSortParm"]?.ToString() == "status_desc")
+                                {
+                                    <i class="fas fa-sort-down"></i>
+                                }
+                                else if (ViewData["StatusSortParm"]?.ToString() == "Status")
+                                {
+                                    <i class="fas fa-sort-up"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-sort"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a asp-action="Index"
+                               asp-route-sortOrder="@ViewData["AmountSortParm"]"
+                               asp-route-searchString="@Model.SearchString"
+                               asp-route-status="@Model.StatusFilter"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                                Amount
+                                @if (ViewData["AmountSortParm"]?.ToString() == "amount_desc")
+                                {
+                                    <i class="fas fa-sort-down"></i>
+                                }
+                                else if (ViewData["AmountSortParm"]?.ToString() == "Amount")
+                                {
+                                    <i class="fas fa-sort-up"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-sort"></i>
+                                }
+                            </a>
+                        </th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Invoices)
+                    {
+                        <tr>
+                            <td>@item.InvoiceDate.ToString("d")</td>
+                            <td>@item.InvoiceNumber</td>
+                            <td>@item.SalesOrder.Customer.CustomerDisplayName</td>
+                            <td>@item.SalesOrder.SONumber</td>
+                            <td>
+                                <span class="badge bg-@GetStatusBadgeColor(item.Status)">
+                                    @item.Status
+                                </span>
+                            </td>
+                            <td>@item.TotalAmount.ToString("C", new System.Globalization.CultureInfo(item.SalesOrder.Currency.Code))</td>
+                            <td>@item.DueDate.ToString("d")</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="DownloadInvoicePdf" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.table').DataTable({
+                paging: false,
+                searching: false,
+                info: false,
+                ordering: false
+            });
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeColor(InvoiceStatus status)
+    {
+        return status switch
+        {
+            InvoiceStatus.Draft => "secondary",
+            InvoiceStatus.Sent => "primary",
+            InvoiceStatus.Paid => "success",
+            InvoiceStatus.PartiallyPaid => "warning",
+            InvoiceStatus.Overdue => "danger",
+            InvoiceStatus.Cancelled => "dark",
+            InvoiceStatus.Refunded => "info",
+            _ => "light"
+        };
+    }
+}

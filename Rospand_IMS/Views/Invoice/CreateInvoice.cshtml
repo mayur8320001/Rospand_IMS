@@ -1,0 +1,78 @@
+﻿@model Rospand_IMS.Models.InvoiceCreateViewModel
+
+<h2>Create Invoice for Sales Order @Model.SONumber</h2>
+
+<form asp-action="CreateInvoice">
+    <input type="hidden" asp-for="SalesOrderId" />
+    <input type="hidden" asp-for="CustomerName" />
+    <input type="hidden" asp-for="SONumber" />
+    <div class="form-group">
+        <label asp-for="InvoiceDate" class="control-label"></label>
+        <input asp-for="InvoiceDate" class="form-control" />
+        <span asp-validation-for="InvoiceDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DueDate" class="control-label"></label>
+        <input asp-for="DueDate" class="form-control" />
+        <span asp-validation-for="DueDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Notes" class="control-label"></label>
+        <textarea asp-for="Notes" class="form-control"></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
+    </div>
+
+    <h4>Invoice Items</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Discount %</th>
+                <th>Tax Rate %</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Model.Items[i].ProductName (@Model.Items[i].ProductSKU)
+                        <input type="hidden" asp-for="@Model.Items[i].ProductId" />
+                        <input type="hidden" asp-for="@Model.Items[i].ProductName" />
+                        <input type="hidden" asp-for="@Model.Items[i].ProductSKU" />
+                        <input type="hidden" asp-for="@Model.Items[i].Description" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model.Items[i].Quantity" class="form-control" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model.Items[i].UnitPrice" class="form-control" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model.Items[i].DiscountPercent" class="form-control" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model.Items[i].TaxRate" class="form-control" />
+                    </td>
+                    <td>
+                        @{
+                            var lineTotal = Model.Items[i].Quantity * Model.Items[i].UnitPrice *
+                            (1 - Model.Items[i].DiscountPercent / 100) *
+                            (1 + Model.Items[i].TaxRate / 100);
+                        }
+                        @lineTotal.ToString("C")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <input type="submit" value="Create Invoice" class="btn btn-primary" />
+    </div>
+</form>

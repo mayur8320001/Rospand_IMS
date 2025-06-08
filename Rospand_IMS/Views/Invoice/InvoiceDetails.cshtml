@@ -1,0 +1,129 @@
+﻿@model Rospand_IMS.Models.InvoiceDetailsViewModel
+
+<h2>Invoice @Model.Invoice.InvoiceNumber</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Customer Information</h4>
+        <p>
+            <strong>@Model.Invoice.SalesOrder.Customer.CustomerDisplayName</strong><br />
+            <!-- Add customer address fields if available -->
+        </p>
+    </div>
+    <div class="col-md-6 text-right">
+        <h4>Invoice Details</h4>
+        <p>
+            <strong>Date:</strong> @Model.Invoice.InvoiceDate.ToShortDateString()<br />
+            <strong>Due Date:</strong> @Model.Invoice.DueDate.ToShortDateString()<br />
+            <strong>Status:</strong> @Model.Invoice.Status<br />
+            <strong>Sales Order:</strong> @Model.Invoice.SalesOrder.SONumber
+        </p>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Discount</th>
+            <th>Tax Rate</th>
+            <th>Total</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Invoice.Items)
+        {
+            <tr>
+                <td>@item.Product.Name (@item.Product.SKU)</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice.ToString("C")</td>
+                <td>@item.DiscountPercent.ToString("0.##")%</td>
+                <td>@item.TaxRate.ToString("0.##")%</td>
+                <td>@item.LineTotal.ToString("C")</td>
+                <td>  <a asp-action="DownloadInvoicePdf" asp-route-id="@Model.Invoice.Id" class="btn btn-primary">Download PDF</a></td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
+            <td>@Model.Invoice.SubTotal.ToString("C")</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-right"><strong>Tax:</strong></td>
+            <td>@Model.Invoice.TaxAmount.ToString("C")</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-right"><strong>Total:</strong></td>
+            <td>@Model.Invoice.TotalAmount.ToString("C")</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-right"><strong>Paid:</strong></td>
+            <td>@Model.TotalPaid.ToString("C")</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-right"><strong>Balance Due:</strong></td>
+            <td>@Model.BalanceDue.ToString("C")</td>
+        </tr>
+    </tfoot>
+</table>
+
+@if (!string.IsNullOrEmpty(Model.Invoice.Notes))
+{
+    <div class="panel panel-default">
+        <div class="panel-heading">Notes</div>
+        <div class="panel-body">@Model.Invoice.Notes</div>
+    </div>
+}
+
+<h3>Payments</h3>
+@if (Model.Payments.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in Model.Payments)
+            {
+                <tr>
+                    <td>@payment.PaymentDate.ToShortDateString()</td>
+                    <td>@payment.Amount.ToString("C")</td>
+                    <td>@payment.Method</td>
+                    <td>@payment.TransactionReference</td>
+                    <td>@payment.Notes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No payments recorded.</p>
+}
+
+@if (Model.Invoice.Status != InvoiceStatus.Paid && Model.Invoice.Status != InvoiceStatus.Cancelled)
+{
+    <div class="form-group">
+        <a asp-action="AddPayment" asp-route-invoiceId="@Model.Invoice.Id" class="btn btn-success">Add Payment</a>
+
+        @if (Model.Invoice.Status == InvoiceStatus.Draft)
+        {
+            <form asp-action="SendInvoice" method="post" style="display:inline">
+                <input type="hidden" name="id" value="@Model.Invoice.Id" />
+                <button type="submit" class="btn btn-primary">Send Invoice</button>
+            </form>
+        }
+    </div>
+}
+
+<a asp-action="Details" asp-controller="SalesOrder" asp-route-id="@Model.Invoice.SalesOrderId" class="btn btn-default">Back to Sales Order</a>

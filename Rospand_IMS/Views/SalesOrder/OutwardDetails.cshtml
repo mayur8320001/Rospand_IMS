@@ -1,0 +1,97 @@
+﻿@model Rospand_IMS.Models.OutwardEntry
+
+@{
+    ViewData["Title"] = $"Outward Entry #{Model.OutwardNumber}";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@ViewData["Title"]</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Sales Order</dt>
+                    <dd class="col-sm-8">
+                        <a asp-action="Details" asp-controller="SalesOrder" asp-route-id="@Model.SalesOrderId">
+                            @Model.SalesOrder?.SONumber
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-4">Outward Date</dt>
+                    <dd class="col-sm-8">@Model.OutwardDate.ToString("d")</dd>
+
+                    <dt class="col-sm-4">Warehouse</dt>
+                    <dd class="col-sm-8">@Model.Warehouse?.Name</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @@GetStatusBadgeClass(Model.Status)">
+                            @Model.Status
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    @if (Model.DeliveryDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Delivery Date</dt>
+                        <dd class="col-sm-8">@Model.DeliveryDate.Value.ToString("d")</dd>
+
+                      @*   <dt class="col-sm-4">Delivered By</dt>
+                        <dd class="col-sm-8">@Model.DeliveredBy</dd> *@
+                    }
+
+                    <dt class="col-sm-4">Created Date</dt>
+                    <dd class="col-sm-8">@Model.CreatedDate.ToString("g")</dd>
+
+                    <dt class="col-sm-4">Notes</dt>
+                    <dd class="col-sm-8">@Model.Notes</dd>
+                </dl>
+            </div>
+        </div>
+
+        <h4 class="mt-4">Items</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Quantity</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Product?.Name</td>
+                            <td>@item.Product?.SKU</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Notes</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            @if (Model.Status == OutwardEntryStatus.Shipped)
+            {
+                <a asp-action="MarkAsDelivered" asp-route-id="@Model.Id" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Mark as Delivered
+                </a>
+            }
+            <a asp-action="Details" asp-controller="SalesOrder" asp-route-id="@Model.SalesOrderId" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Order
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

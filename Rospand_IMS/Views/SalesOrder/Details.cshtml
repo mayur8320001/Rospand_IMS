@@ -1,4 +1,7 @@
 ﻿@model Rospand_IMS.Models.SalesOrderDetailsViewModel
+@using Microsoft.EntityFrameworkCore
+@using Rospand_IMS.Data
+@inject ApplicationDbContext _context
 
 @{
     ViewData["Title"] = $"Sales Order #{Model.SalesOrder.SONumber}";
@@ -8,6 +11,7 @@
     <div class="card-header">
         <h3>Sales Order #@Model.SalesOrder.SONumber</h3>
     </div>
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
@@ -23,6 +27,13 @@
                         <span class="badge bg-@GetStatusBadgeColor(Model.SalesOrder.Status)">
                             @Model.SalesOrder.Status
                         </span>
+                        @if (Model.SalesOrder.Status == SalesOrderStatus.Delivered)
+                        {
+                            <div class="text-success">
+                                <i class="fas fa-check-circle"></i>
+                                Order fully delivered on @Model.SalesOrder.OutwardEntries.Max(oe => oe.DeliveryDate)?.ToString("d")
+                            </div>
+                        }
                     </dd>
                 </dl>
             </div>
@@ -87,23 +98,25 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">
-        <h4>Dispatch History</h4>
-    </div>
-    <div class="card-body">
-        @if (Model.SalesOrder.OutwardEntries.Any())
-        {
+@if (Model.SalesOrder.OutwardEntries.Any())
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="card-title">Outward Entries</h3>
+        </div>
+        <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered">
+                <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>Outward #</th>
                             <th>Date</th>
                             <th>Warehouse</th>
                             <th>Status</th>
+                            <th>Delivery Date</th>
                             <th>Items</th>
                             <th>Total Qty</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,12 +124,22 @@
                         {
                             <tr>
                                 <td>@entry.OutwardNumber</td>
-                                <td>@entry.OutwardDate.ToShortDateString()</td>
+                                <td>@entry.OutwardDate.ToString("d")</td>
                                 <td>@entry.Warehouse?.Name</td>
                                 <td>
-                                    <span class="badge bg-@GetStatusBadgeClass(entry.Status)">
+                                    <span class="badge bg-@GetOutwardStatusBadgeColor(entry.Status)">
                                         @entry.Status
                                     </span>
+                                </td>
+                                <td>
+                                    @if (entry.DeliveryDate.HasValue)
+                                    {
+                                        @entry.DeliveryDate.Value.ToString("d")
+                                    }
+                                    else if (entry.Status == OutwardEntryStatus.Shipped)
+                                    {
+                                        <span class="text-muted">Pending</span>
+                                    }
                                 </td>
                                 <td>
                                     <ul class="list-unstyled">
@@ -127,27 +150,40 @@
                                     </ul>
                                 </td>
                                 <td>@entry.Items.Sum(i => i.Quantity)</td>
+                                <td>
+                                    <a asp-action="OutwardDetails" asp-route-id="@entry.Id" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
+                                    @if (entry.Status == OutwardEntryStatus.Processed)
+                                    {
+                                        <a asp-action="MarkAsDelivered" asp-route-id="@entry.Id" class="btn btn-sm btn-success">
+                                            <i class="fas fa-truck"></i> Mark Delivered
+                                        </a>
+                                    }
+                                 
+                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        }
-        else
-        {
-            <div class="alert alert-info">No dispatch entries yet.</div>
-        }
-
-        @if (Model.SalesOrder.Status == SalesOrderStatus.Confirmed || Model.SalesOrder.Status == SalesOrderStatus.PartiallyShipped)
-        {
-            <div class="mt-3">
-                <a asp-action="CreateOutwardEntry" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-primary">
-                    <i class="fas fa-truck"></i> Create New Dispatch
-                </a>
-            </div>
-        }
+        </div>
     </div>
-</div>
+}
+else
+{
+    <div class="alert alert-info">No dispatch entries yet.</div>
+}
+
+@if (Model.SalesOrder.Status == SalesOrderStatus.Confirmed || Model.SalesOrder.Status == SalesOrderStatus.PartiallyShipped)
+{
+    <div class="mt-3">
+        <a asp-action="CreateOutwardEntry" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-primary">
+            <i class="fas fa-truck"></i> Create New Dispatch
+        </a>
+    </div>
+}
+
 
 <div class="mt-3">
     <a asp-action="Index" class="btn btn-secondary">
@@ -162,6 +198,29 @@
             </button>
         </form>
     }
+    @if (Model.SalesOrder.Status == SalesOrderStatus.Delivered || Model.SalesOrder.Status == SalesOrderStatus.Shipped)
+    {
+        var hasInvoice = await _context.Invoices.AnyAsync(i => i.SalesOrderId == Model.SalesOrder.Id);
+        if (hasInvoice)
+        {
+            var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.SalesOrderId == Model.SalesOrder.Id);
+            <a asp-action="InvoiceDetails" asp-controller="Invoice" asp-route-id="@invoice.Id" class="btn btn-info">
+                <i class="fas fa-file-invoice"></i> View Invoice
+            </a>
+
+        }
+        else
+        {
+           @*  <a asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-success">
+                <i class="fas fa-file-invoice-dollar"></i> Create Invoice
+            </a> *@
+            <a asp-controller="Invoice" asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id"> <i class="fas fa-file-invoice-dollar"></i> Create Invoice</a>
+
+          @*   <a asp-controller="SalesOrder" asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id">  <i class="fas fa-file-invoice-dollar">Create Invoice</a> *@
+
+        }
+    }
+
 </div>
 
 @section Styles {
@@ -195,14 +254,16 @@
         };
     }
 
-    string GetStatusBadgeClass(OutwardEntryStatus status)
+    string GetOutwardStatusBadgeColor(OutwardEntryStatus status)
     {
         return status switch
         {
             OutwardEntryStatus.Draft => "secondary",
-            OutwardEntryStatus.Processed => "success",
+            OutwardEntryStatus.Processed => "primary",
+            OutwardEntryStatus.Shipped => "info",
+            OutwardEntryStatus.Delivered => "success",
             OutwardEntryStatus.Cancelled => "danger",
-            _ => "primary"
+            _ => "light"
         };
     }
 }
