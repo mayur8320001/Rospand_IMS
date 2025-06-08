@@ -18,13 +18,13 @@
             --secondary-color: #f8f9fc;
             --accent-color: #2e59d9;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
             overflow-x: hidden;
         }
-        
+
         .header {
             position: fixed;
             top: 0;
@@ -35,12 +35,12 @@
             background: white;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
-        
+
         .logo-img {
             max-height: 40px;
             object-fit: contain;
         }
-        
+
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -53,24 +53,24 @@
             z-index: 999;
             overflow-y: auto;
         }
-        
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar.collapsed .nav-link-text,
-        .sidebar.collapsed .dropdown-toggle::after {
-            display: none;
-        }
-        
-        .sidebar.collapsed .nav-link {
-            justify-content: center;
-        }
-        
-        .sidebar.collapsed .dropdown-menu {
-            display: none !important;
-        }
-        
+
+            .sidebar.collapsed {
+                width: var(--sidebar-collapsed-width);
+            }
+
+                .sidebar.collapsed .nav-link-text,
+                .sidebar.collapsed .dropdown-toggle::after {
+                    display: none;
+                }
+
+                .sidebar.collapsed .nav-link {
+                    justify-content: center;
+                }
+
+                .sidebar.collapsed .dropdown-menu {
+                    display: none !important;
+                }
+
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--header-height);
@@ -79,19 +79,19 @@
             transition: all 0.3s;
             background-color: #f5f7fa;
         }
-        
-        .main-content.expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-        
+
+            .main-content.expanded {
+                margin-left: var(--sidebar-collapsed-width);
+            }
+
         .navbar-nav {
             width: 100%;
         }
-        
+
         .nav-item {
             position: relative;
         }
-        
+
         .nav-link {
             color: rgba(255, 255, 255, 0.8) !important;
             padding: 0.75rem 1rem;
@@ -100,19 +100,19 @@
             align-items: center;
             transition: all 0.3s;
         }
-        
-        .nav-link:hover, .nav-link:focus {
-            color: white !important;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .nav-link i {
-            font-size: 0.85rem;
-            margin-right: 0.5rem;
-            width: 20px;
-            text-align: center;
-        }
-        
+
+            .nav-link:hover, .nav-link:focus {
+                color: white !important;
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-link i {
+                font-size: 0.85rem;
+                margin-right: 0.5rem;
+                width: 20px;
+                text-align: center;
+            }
+
         .dropdown-menu {
             background-color: var(--accent-color);
             border: none;
@@ -120,28 +120,21 @@
             margin: 0;
             padding: 0;
         }
-        
+
         .dropdown-item {
             color: rgba(255, 255, 255, 0.8);
             padding: 0.5rem 1rem 0.5rem 2rem;
         }
-        
-        .dropdown-item:hover, .dropdown-item:focus {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-        
+
+            .dropdown-item:hover, .dropdown-item:focus {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+
         .dropdown-divider {
             border-color: rgba(255, 255, 255, 0.1);
         }
-        
-        .content-wrapper {
-            background: white;
-            border-radius: 0.35rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
-            padding: 1.5rem;
-        }
-        
+
         .sidebar-toggle {
             background: none;
             border: none;
@@ -149,24 +142,24 @@
             font-size: 1.25rem;
             cursor: pointer;
         }
-        
+
         @@media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
             }
-            
-            .sidebar.collapsed {
-                transform: translateX(0);
-                width: var(--sidebar-collapsed-width);
-            }
-            
+
+                .sidebar.collapsed {
+                    transform: translateX(0);
+                    width: var(--sidebar-collapsed-width);
+                }
+
             .main-content {
                 margin-left: 0;
             }
-            
-            .main-content.expanded {
-                margin-left: var(--sidebar-collapsed-width);
-            }
+
+                .main-content.expanded {
+                    margin-left: var(--sidebar-collapsed-width);
+                }
         }
     </style>
     @RenderSection("Styles", required: false)
@@ -181,10 +174,6 @@
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
-        @* <div class="d-flex align-items-center">
-            <partial name="_LoginPartial" />
-        </div>
- *@
     </header>
 
     <div class="sidebar" id="sidebar">
@@ -213,7 +202,7 @@
                         <li><a class="dropdown-item" asp-controller="City" asp-action="Index"><i class="fas fa-city me-2"></i>Cities</a></li>
                     </ul>
                 </li>
-                
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-warehouse"></i>
@@ -235,6 +224,7 @@
                         <li><a class="dropdown-item" asp-controller="Customer" asp-action="Index"><i class="fas fa-users me-2"></i>Customer Master</a></li>
                         <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="Index"><i class="fas fa-file-invoice me-2"></i>Sales Orders</a></li>
                         <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="Create"><i class="fas fa-plus-circle me-2"></i>Create Order</a></li>
+                        <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="MarkAsDelivered"><i class="fas fa-plus-circle me-2"></i>Delivered Order</a></li>
                     </ul>
                 </li>
 
@@ -299,12 +289,7 @@
     </div>
 
     <div class="main-content" id="main-content">
-@*         <div class="content-wrapper"> *@
-            
-         @*    <main role="main" class="pb-3"> *@
-                @RenderBody()
-          @*   </main> *@
-     @*    </div> *@
+        @RenderBody()
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -321,12 +306,12 @@
             const mainContent = document.getElementById('main-content');
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
-            
+
             // Store preference in localStorage
             const isCollapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
-        
+
         // Check for saved preference on page load
         document.addEventListener('DOMContentLoaded', function() {
             const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -334,7 +319,7 @@
                 document.getElementById('sidebar').classList.add('collapsed');
                 document.getElementById('main-content').classList.add('expanded');
             }
-            
+
             // Highlight active menu item
             const currentPath = window.location.pathname;
             document.querySelectorAll('.nav-link').forEach(link => {

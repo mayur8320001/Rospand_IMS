@@ -67,6 +67,10 @@ namespace Rospand_IMS.Models
         public int? PreviousQuantity { get; set; }
         public int? NewQuantity { get; set; }
 
+        // Add these new properties
+        public int? PreviousReservedQuantity { get; set; }
+        public int? NewReservedQuantity { get; set; }
+
         [StringLength(500)]
         public string? Notes { get; set; }
      

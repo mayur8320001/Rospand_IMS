@@ -1,26 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
-using Rospand_IMS.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 
 namespace Rospand_IMS.Controllers
 {
-    
+
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<HomeController> _logger;
+      //  private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
             _context = context;
-            _logger = logger;
+            //   , ILogger<HomeController> logger   _logger = logger;
         }
 
         public async Task<IActionResult> Index()

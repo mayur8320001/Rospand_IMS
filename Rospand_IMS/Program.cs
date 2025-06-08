@@ -1,28 +1,25 @@
 using DinkToPdf.Contracts;
 using DinkToPdf;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Rospand_IMS.Data;
 using Rospand_IMS.Services;
-using System;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Register services
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+builder.Services.AddScoped<ISKUGenerator, SKUGenerator>();
+
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
-// Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("con")));
 
-
-
-// Configure JWT Authentication
+// Uncomment and configure JWT if you are using API auth
+/*
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(options =>
 {
@@ -46,21 +43,21 @@ builder.Services.AddAuthentication(options =>
         {
             context.Token = context.Request.Cookies["jwt"];
             return Task.CompletedTask;
-        }
+        };
     };
 });
-builder.Services.AddScoped<ISKUGenerator, SKUGenerator>();
-
+*/
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
+// Serve static files and handle routing
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -69,6 +66,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Proper MVC default routing
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

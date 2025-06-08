@@ -79,5 +79,15 @@ namespace Rospand_IMS.Models
         public int TotalDispatched { get; set; }
         public int RemainingToDispatch { get; set; }
     }
-  
+
+
+    public class MarkAsDeliveredViewModel
+    {
+        public int OutwardEntryId { get; set; }
+        public string OutwardNumber { get; set; }
+        public DateTime DeliveryDate { get; set; } = DateTime.Today;
+        public string Notes { get; set; }
+       // public string DeliveredBy { get; set; }
+    }
+
 }

@@ -76,7 +76,7 @@ namespace Rospand_IMS.Models
         public int? CategoryId { get; set; }
         public Category? Category { get; set; }
 
-
+      
         public bool IsInventoryTracked { get; set; } = true;
 
         // Grouped product

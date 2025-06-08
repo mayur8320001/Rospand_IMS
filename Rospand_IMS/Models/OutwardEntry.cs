@@ -19,15 +19,22 @@ namespace Rospand_IMS.Models
         public Warehouse Warehouse { get; set; }
 
         [Required]
-        public DateTime OutwardDate { get; set; } = DateTime.UtcNow;
+        public DateTime OutwardDate { get; set; } = DateTime.Now;
 
         [StringLength(500)]
         public string Notes { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime ModifiedDate { get; set; } = DateTime.Now;
+       
 
-        [StringLength(100)]
-        public string CreatedBy { get; set; }
+
+
+        public DateTime? DeliveryDate { get; set; } = DateTime.Now;
+        /*  [StringLength(100)]
+          public string CreatedBy { get; set; }\
+        
+          public string DeliveredBy { get; set; }*/
 
         public OutwardEntryStatus Status { get; set; } = OutwardEntryStatus.Processed;
 

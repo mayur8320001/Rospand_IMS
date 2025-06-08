@@ -178,5 +178,132 @@ namespace Rospand_IMS.Controllers
 
             return RedirectToAction(nameof(Details), new { id = product.Id });
         }
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var product = await _context.Products
+                .Include(p => p.Components)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditProductViewModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                SKU = product.SKU,
+                AutoGenerateSKU = false, // Assume existing SKU is not auto-generated
+                SelectedType = product.Type ?? ProductType.Goods,
+                Description = product.Description,
+                UnitId = product.UnitId,
+                CostCategoryId = product.CostCategoryId,
+                SalesPrice = product.SalesPrice,
+                PurchasePrice = product.PurchasePrice,
+                Length = product.Length,
+                Width = product.Width,
+                Height = product.Height,
+                DimensionUnit = product.DimensionUnit ?? DimensionUnit.Centimeter,
+                Weight = product.Weight,
+                WeightUnit = product.WeightUnit,
+                ServiceDuration = product.ServiceDuration,
+                ServiceDurationUnit = product.ServiceDurationUnit,
+                CategoryId = product.CategoryId,
+                IsGroupedProduct = product.IsGroupedProduct,
+                Components = product.Components.Select(c => new ProductComponentViewModel
+                {
+                    ComponentProductId = c.ComponentProductId,
+                    Quantity = c.Quantity,
+                    Notes = c.Notes,
+                    ProductName = c.ComponentProduct?.Name,
+                    SKU = c.ComponentProduct?.SKU
+                }).ToList(),
+                Units = await _context.Units.ToListAsync(),
+                CostCategories = await _context.CostCategories.ToListAsync(),
+                Categories = await _context.Categories.ToListAsync(),
+                AvailableProducts = await _context.Products
+                    .Where(p => !p.IsGroupedProduct && p.Id != product.Id)
+                    .ToListAsync()
+            };
+
+            return View(model);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditProductViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.Units = await _context.Units.ToListAsync();
+                model.CostCategories = await _context.CostCategories.ToListAsync();
+                model.Categories = await _context.Categories.ToListAsync();
+                model.AvailableProducts = await _context.Products
+                    .Where(p => !p.IsGroupedProduct && p.Id != model.Id)
+                    .ToListAsync();
+                return View(model);
+            }
+
+            var product = await _context.Products
+                .Include(p => p.Components)
+                .FirstOrDefaultAsync(p => p.Id == model.Id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.Name = model.Name;
+            product.Description = model.Description;
+            product.Type = model.SelectedType;
+            product.SKU = model.AutoGenerateSKU
+                ? await _skuGenerator.GenerateSKU(product)
+                : model.SKU;
+            product.CategoryId = model.CategoryId;
+            product.IsGroupedProduct = model.IsGroupedProduct;
+            product.Length = model.Length;
+            product.Width = model.Width;
+            product.Height = model.Height;
+            product.DimensionUnit = model.DimensionUnit;
+            product.Weight = model.Weight;
+            product.WeightUnit = model.WeightUnit;
+            product.SalesPrice = model.SalesPrice;
+            product.PurchasePrice = model.PurchasePrice;
+
+            if (model.SelectedType == ProductType.Goods)
+            {
+                product.UnitId = model.UnitId;
+                product.CostCategoryId = model.CostCategoryId;
+            }
+            else
+            {
+                product.ServiceDuration = model.ServiceDuration;
+                product.ServiceDurationUnit = model.ServiceDurationUnit;
+            }
+
+            // Update Components
+            product.Components.Clear(); // Remove old ones
+            if (model.IsGroupedProduct)
+            {
+                foreach (var comp in model.Components)
+                {
+                    product.Components.Add(new ProductComponent
+                    {
+                        ComponentProductId = comp.ComponentProductId,
+                        Quantity = comp.Quantity,
+                        Notes = comp.Notes
+                    });
+                }
+            }
+
+            _context.Products.Update(product);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = product.Id });
+        }
+
+
     }
+
 }
