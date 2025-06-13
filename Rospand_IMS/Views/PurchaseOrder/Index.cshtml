@@ -38,6 +38,7 @@
                 @foreach (var item in Model)
                 {
                     <tr>
+                   
                         <td>@Html.DisplayFor(modelItem => item.PONumber)</td>
                         <td>@Html.DisplayFor(modelItem => item.Vendor.CompanyName)</td>
                         <td>@item.OrderDate.ToString("d")</td>
@@ -67,14 +68,14 @@
     {
         return status switch
         {
-            PurchaseOrderStatus.Draft => "badge-secondary",
-            PurchaseOrderStatus.Submitted => "badge-primary",
-            PurchaseOrderStatus.Approved => "badge-info",
-            PurchaseOrderStatus.Ordered => "badge-warning",
-            PurchaseOrderStatus.PartiallyReceived => "badge-warning",
-            PurchaseOrderStatus.Received => "badge-success",
-            PurchaseOrderStatus.Cancelled => "badge-danger",
-            _ => "badge-secondary",
+            PurchaseOrderStatus.Draft => "bg-secondary",
+            PurchaseOrderStatus.Submitted => "bg-primary",
+            PurchaseOrderStatus.Approved => "bg-info",
+            PurchaseOrderStatus.Ordered => "bg-warning",
+            PurchaseOrderStatus.PartiallyReceived => "bg-warning",
+            PurchaseOrderStatus.Received => "bg-success",
+            PurchaseOrderStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary",
         };
     }
 }

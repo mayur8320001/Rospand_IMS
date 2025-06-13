@@ -64,30 +64,47 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: SalesOrder
-        public async Task<IActionResult> Index(SalesOrderStatus? status, string searchString)
+        public async Task<IActionResult> Index(string searchString, SalesOrderStatus? status, int pageNumber = 1)
         {
-            var query = _context.SalesOrders
-                .Include(so => so.Customer)
-                .Include(so => so.Currency)
-                .OrderByDescending(so => so.OrderDate)
-                .AsQueryable();
+            int pageSize = 10;
 
-            if (status.HasValue)
-            {
-                query = query.Where(so => so.Status == status.Value);
-            }
+            // Start with a base query
+            IQueryable<SalesOrder> salesOrders = _context.SalesOrders.Include(s => s.Customer).Include(s => s.Currency);
 
+            // Apply search filter
             if (!string.IsNullOrEmpty(searchString))
             {
-                query = query.Where(so => so.SONumber.Contains(searchString) ||
-                                         so.Customer.CustomerDisplayName.Contains(searchString));
+                salesOrders = salesOrders.Where(s => s.SONumber.Contains(searchString) || s.Customer.CustomerDisplayName.Contains(searchString));
             }
 
-            ViewBag.StatusFilter = status;
-            ViewBag.SearchString = searchString;
-            return View(await query.ToListAsync());
-        }
+            // Apply status filter
+            if (status.HasValue)
+            {
+                salesOrders = salesOrders.Where(s => s.Status == status.Value);
+            }
 
+            // Calculate total number of pages
+            int totalCount = await salesOrders.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            // Apply pagination
+            salesOrders = salesOrders.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            // Execute the query
+            var salesOrderList = await salesOrders.ToListAsync();
+
+            // Create the view model
+            var viewModel = new SalesOrderIndexViewModel
+            {
+                SalesOrders = salesOrderList,
+                SearchString = searchString,
+                Status = status,
+                PageIndex = pageNumber,
+                TotalPages = totalPages
+            };
+
+            return View(viewModel);
+        }
         // GET: SalesOrder/Create
         public async Task<IActionResult> Create()
         {
@@ -315,7 +332,6 @@ namespace Rospand_IMS.Controllers
 
 
 
-
         [HttpGet]
         public async Task<IActionResult> CreateOutwardEntry(int salesOrderId)
         {
@@ -358,13 +374,15 @@ namespace Rospand_IMS.Controllers
                 .ToDictionary(g => g.Key, g => g.Sum(oi => oi.Quantity));
 
             var productIds = salesOrder.Items.Select(i => i.ProductId).ToList();
-            var inventories = await _context.Inventories
+
+            // Get reserved quantities for all products in the sales order
+            var reservedQuantities = await _context.Inventories
                 .Where(i => productIds.Contains(i.ProductId))
                 .GroupBy(i => i.ProductId)
                 .Select(g => new
                 {
                     ProductId = g.Key,
-                    QuantityAvailable = g.Sum(i => i.QuantityOnHand - i.QuantityReserved)
+                    QuantityReserved = g.Sum(i => i.QuantityReserved)
                 })
                 .ToListAsync();
 
@@ -375,8 +393,11 @@ namespace Rospand_IMS.Controllers
                     : 0;
 
                 var remainingToDispatch = item.Quantity - alreadyDispatched;
-                var inventory = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                var availableToDispatch = Math.Min(remainingToDispatch, inventory?.QuantityAvailable ?? 0);
+                var reservedForProduct = reservedQuantities.FirstOrDefault(i => i.ProductId == item.ProductId);
+                var reservedQty = reservedForProduct?.QuantityReserved ?? 0;
+
+                // The maximum we can dispatch is the lesser of remaining quantity or reserved quantity
+                var maxDispatchQty = Math.Min(remainingToDispatch, reservedQty);
 
                 viewModel.Items.Add(new OutwardEntryItemViewModel
                 {
@@ -385,15 +406,15 @@ namespace Rospand_IMS.Controllers
                     ProductSKU = item.Product.SKU,
                     QuantityOrdered = item.Quantity,
                     QuantityDispatched = alreadyDispatched,
-                    QuantityAvailable = availableToDispatch,
-                    Quantity = availableToDispatch > 0 ? availableToDispatch : 0
+                    QuantityReserved = reservedQty, // This is the actual reserved quantity
+                    Quantity = maxDispatchQty > 0 ? maxDispatchQty : 0
                 });
             }
 
             return View(viewModel);
         }
 
-       [HttpPost]
+        [HttpPost]
        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateOutwardEntry(OutwardEntryCreateViewModel viewModel)
 {

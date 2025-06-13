@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rospand_IMS.Data;
 
@@ -11,9 +12,11 @@ using Rospand_IMS.Data;
 namespace Rospand_IMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250609071719_logT")]
+    partial class logT
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -556,7 +559,7 @@ namespace Rospand_IMS.Migrations
                     b.ToTable("InvoiceItems");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.LoginM.Page", b =>
+            modelBuilder.Entity("Rospand_IMS.Models.LoginM.Permission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -564,11 +567,11 @@ namespace Rospand_IMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Action")
+                    b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Controller")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -578,7 +581,44 @@ namespace Rospand_IMS.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Pages");
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Category = "Dashboard",
+                            Description = "View Dashboard",
+                            Name = "Dashboard.View"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Category = "Country",
+                            Description = "View Countries",
+                            Name = "Country.View"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "Country",
+                            Description = "Create Countries",
+                            Name = "Country.Create"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "Country",
+                            Description = "Edit Countries",
+                            Name = "Country.Edit"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "Country",
+                            Description = "Delete Countries",
+                            Name = "Country.Delete"
+                        });
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.LoginM.Role", b =>
@@ -589,6 +629,10 @@ namespace Rospand_IMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -596,6 +640,14 @@ namespace Rospand_IMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Super Administrator with full access",
+                            Name = "SuperAdmin"
+                        });
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.LoginM.RolePermission", b =>
@@ -603,41 +655,41 @@ namespace Rospand_IMS.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PageId")
+                    b.Property<int>("PermissionId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("CanAdjust")
-                        .HasColumnType("bit");
+                    b.HasKey("RoleId", "PermissionId");
 
-                    b.Property<bool>("CanApprove")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanCreate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanExport")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanRead")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanReceive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanUpdate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewLowStock")
-                        .HasColumnType("bit");
-
-                    b.HasKey("RoleId", "PageId");
-
-                    b.HasIndex("PageId");
+                    b.HasIndex("PermissionId");
 
                     b.ToTable("RolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 1
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 5
+                        });
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.LoginM.User", b =>
@@ -648,12 +700,26 @@ namespace Rospand_IMS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastLogin")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -661,9 +727,41 @@ namespace Rospand_IMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2025, 6, 9, 7, 17, 16, 464, DateTimeKind.Utc).AddTicks(1065),
+                            Email = "superadmin@rospand.com",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$X/vlxsCpQw.xLuuGNXvXUOc8ZI/0e26ljtafQQBqmoHK7.Eg9mM5.",
+                            Salt = "$2a$11$X/vlxsCpQw.xLuuGNXvXUO",
+                            Username = "superadmin"
+                        });
+                });
+
+            modelBuilder.Entity("Rospand_IMS.Models.LoginM.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "RoleId");
+
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.OutwardEntry", b =>
@@ -1359,7 +1457,7 @@ namespace Rospand_IMS.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalPurchases")
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("VendorDisplayName")
                         .IsRequired()
@@ -1613,9 +1711,9 @@ namespace Rospand_IMS.Migrations
 
             modelBuilder.Entity("Rospand_IMS.Models.LoginM.RolePermission", b =>
                 {
-                    b.HasOne("Rospand_IMS.Models.LoginM.Page", "Page")
+                    b.HasOne("Rospand_IMS.Models.LoginM.Permission", "Permission")
                         .WithMany("RolePermissions")
-                        .HasForeignKey("PageId")
+                        .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1625,20 +1723,28 @@ namespace Rospand_IMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Page");
+                    b.Navigation("Permission");
 
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.LoginM.User", b =>
+            modelBuilder.Entity("Rospand_IMS.Models.LoginM.UserRole", b =>
                 {
                     b.HasOne("Rospand_IMS.Models.LoginM.Role", "Role")
-                        .WithMany()
+                        .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Rospand_IMS.Models.LoginM.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.OutwardEntry", b =>
@@ -1862,7 +1968,7 @@ namespace Rospand_IMS.Migrations
                     b.Navigation("Payments");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.LoginM.Page", b =>
+            modelBuilder.Entity("Rospand_IMS.Models.LoginM.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
                 });
@@ -1870,6 +1976,13 @@ namespace Rospand_IMS.Migrations
             modelBuilder.Entity("Rospand_IMS.Models.LoginM.Role", b =>
                 {
                     b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("Rospand_IMS.Models.LoginM.User", b =>
+                {
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.OutwardEntry", b =>

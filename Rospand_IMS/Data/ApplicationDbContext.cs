@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Models;
-
+using Rospand_IMS.Models.LoginM;
 using System.Data;
 
 
@@ -74,7 +74,31 @@ namespace Rospand_IMS.Data
                 .WithMany()
                 .HasForeignKey(pc => pc.ComponentProductId)
                 .OnDelete(DeleteBehavior.Restrict); // prevent cycles or multiple cascade paths
+
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => new { rp.RoleId, rp.PageId });
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(rp => rp.RoleId);
+
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Page)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PageId);
         }
+
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Page> Pages { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+
+
+
+
+
 
     }
 }

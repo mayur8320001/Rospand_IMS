@@ -22,6 +22,8 @@ namespace Rospand_IMS.Models
         [StringLength(20, ErrorMessage = "Outward Number cannot exceed 20 characters")]
         public string OutwardNumber { get; set; }
 
+
+
         [Required(ErrorMessage = "Outward Date is required")]
         [DataType(DataType.Date)]
         public DateTime OutwardDate { get; set; }
@@ -63,6 +65,10 @@ namespace Rospand_IMS.Models
 
         [Range(0, int.MaxValue, ErrorMessage = "Quantity Available cannot be negative")]
         public int QuantityAvailable { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Quantity Reserved cannot be negative")]
+        public int QuantityReserved { get; set; } // Add this property
+
 
         [Required(ErrorMessage = "Dispatch Quantity is required")]
         [Range(0, int.MaxValue, ErrorMessage = "Dispatch Quantity cannot be negative")]

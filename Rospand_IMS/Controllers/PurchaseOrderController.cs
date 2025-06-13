@@ -195,7 +195,7 @@ namespace Rospand_IMS.Controllers
             if (!_context.Warehouses.Any())
             {
                 _context.Warehouses.Add(new Warehouse { Name = "Main Warehouse", Location = "Headquarters" });
-              
+
             }
             var order = await _context.PurchaseOrders
                 .Include(po => po.Items)
@@ -499,6 +499,7 @@ namespace Rospand_IMS.Controllers
         }
 
         // POST: PurchaseOrder/Order/5
+        // POST: PurchaseOrder/Order/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Order(int id)
@@ -523,20 +524,7 @@ namespace Rospand_IMS.Controllers
             order.OrderedBy = User.Identity.Name;
             _context.Update(order);
 
-            // Create inventory transactions for ordered items
-            foreach (var item in order.Items)
-            {
-                var inventory = await _context.Inventories
-                    .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-
-                if (inventory != null)
-                {
-                    inventory.QuantityOnHand += item.Quantity;
-                    _context.Update(inventory);
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // Removed the inventory update code
 
             TempData["SuccessMessage"] = "Purchase order has been marked as ordered successfully.";
             return RedirectToAction(nameof(Details), new { id });
@@ -801,9 +789,9 @@ namespace Rospand_IMS.Controllers
                 await viewResult.View.RenderAsync(viewContext);
                 return writer.GetStringBuilder().ToString();
             }
-           
+
         }
-      
+
         private string GeneratePONumber()
         {
             var lastPO = _context.PurchaseOrders

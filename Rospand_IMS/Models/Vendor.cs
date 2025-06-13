@@ -1,5 +1,6 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rospand_IMS.Models
 {
@@ -50,11 +51,14 @@ namespace Rospand_IMS.Models
 
 
         // Purchase-related properties
+        [Column(TypeName = "decimal(18,4)")]
         public decimal TotalPurchases { get; set; }
         public DateTime? LastPurchaseDate { get; set; }
         public int PaymentTermDays { get; set; } = 30;
         public bool IsActive { get; set; } = true;
         public string? Notes { get; set; }
+      
+        
 
         // Navigation properties
         public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();

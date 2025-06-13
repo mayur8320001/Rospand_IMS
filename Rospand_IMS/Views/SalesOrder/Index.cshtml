@@ -1,54 +1,166 @@
-﻿@model IEnumerable<Rospand_IMS.Models.SalesOrder>
+﻿@model Rospand_IMS.Models.SalesOrderIndexViewModel
 
-<h2>Sales Orders</h2>
+@{
+    ViewData["Title"] = "Sales Orders";
+}
 
-<form asp-action="Index" method="get">
-    <div class="form-group">
-        <label>Filter by Status:</label>
-        <select name="status" asp-items="Html.GetEnumSelectList<Rospand_IMS.Models.SalesOrderStatus>()" class="form-control">
-            <option value="">All</option>
-        </select>
-        <input type="text" name="searchString" value="@ViewBag.SearchString" placeholder="Search by SO Number or Customer" class="form-control" />
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a asp-action="Create" class="btn btn-success">Create New Sales Order</a>
-    </div>
-</form>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>SO Number</th>
-            <th>Customer</th>
-            <th>Order Date</th>
-            <th>Status</th>
-            <th>Total Amount</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var order in Model)
-        {
-            <tr>
-                <td>@order.SONumber</td>
-                <td>@order.Customer.CustomerDisplayName</td>
-                <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
-                <td>@order.Status</td>
-                <td>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo(order.Currency.Code))</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info">Details</a>
-                    @if (order.Status == SalesOrderStatus.Draft)
-                    {
-                        <form asp-action="Confirm" asp-route-id="@order.Id" method="post" style="display:inline;">
-                            <input type="hidden" name="id" value="@order.Id" />
-                            <button type="submit" class="btn btn-warning">Confirm</button>
-                        </form>
-                    }
-                    @if (order.Status == SalesOrderStatus.Confirmed)
-                    {
-                        <a asp-action="CreateOutwardEntry" asp-route-salesOrderId="@order.Id" class="btn btn-primary">Create Outward Entry</a>
-                    }
-                </td>
-            </tr>
+    <style>
+        body {
+            padding: 2rem;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-    </tbody>
-</table>
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: #343a40;
+            font-weight: 600;
+        }
+
+        .search-filter {
+            margin-bottom: 2rem;
+        }
+
+        .sales-order-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: none;
+        }
+
+            .sales-order-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+        .table thead th {
+            background-color: #e9ecef;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .btn {
+            margin-right: 0.5rem;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+
+        .btn-primary:hover, .btn-success:hover, .btn-info:hover, .btn-warning:hover {
+            filter: brightness(90%);
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .pagination .page-link {
+            border-radius: 0.25rem;
+            margin: 0 0.25rem;
+            color: #007bff;
+        }
+
+            .pagination .page-link:hover {
+                background-color: #e9ecef;
+            }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: #fff;
+        }
+    </style>
+
+    <div class="container">
+        <h2 class="mb-4 text-center text-primary"><i class="fas fa-list"></i> @ViewData["Title"]</h2>
+
+        <div class="card p-3 mb-4 shadow-sm border-0 rounded search-filter">
+            <form asp-action="Index" method="get" class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <label asp-for="Status" class="form-label"><i class="fas fa-filter"></i> Filter by Status:</label>
+                    <select asp-for="Status" asp-items="Html.GetEnumSelectList<Rospand_IMS.Models.SalesOrderStatus>()" class="form-select">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SearchString" class="form-label"><i class="fas fa-search"></i> Search:</label>
+                    <div class="input-group">
+                        <input asp-for="SearchString" placeholder="Search by SO Number or Customer" class="form-control" />
+                        <button type="submit" class="btn btn-outline-secondary"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2"><i class="fas fa-filter"></i> Filter</button>
+                    <a asp-action="Create" class="btn btn-success"><i class="fas fa-plus"></i> Create New Sales Order</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="row">
+            @foreach (var order in Model.SalesOrders)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card sales-order-card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-file-invoice"></i> @order.SONumber</h5>
+                            <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-user"></i> @order.Customer.CustomerDisplayName</h6>
+                            <p class="card-text"><i class="fas fa-calendar-alt"></i> Order Date: @order.OrderDate.ToString("yyyy-MM-dd")</p>
+                            <p class="card-text">
+                                <i class="fas fa-tags"></i> Status:
+                                @if (order.Status == Rospand_IMS.Models.SalesOrderStatus.Draft)
+                                {
+                                    <span class="badge bg-secondary"><i class="fas fa-pencil-alt"></i> Draft</span>
+                                }
+                                else if (order.Status == Rospand_IMS.Models.SalesOrderStatus.Confirmed)
+                                {
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Confirmed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info"><i class="fas fa-info-circle"></i> @order.Status</span>
+                                }
+                            </p>
+                            <p class="card-text"><i class="fas fa-money-bill-wave"></i> Total Amount: @order.TotalAmount.ToString("C", new System.Globalization.CultureInfo(order.Currency.Code))</p>
+                            <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm"><i class="fas fa-info"></i> Details</a>
+                            @if (order.Status == Rospand_IMS.Models.SalesOrderStatus.Draft)
+                            {
+                                <form asp-action="Confirm" asp-route-id="@order.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-check-circle"></i> Confirm</button>
+                                </form>
+                            }
+                            @if (order.Status == Rospand_IMS.Models.SalesOrderStatus.Confirmed)
+                            {
+                                <a asp-action="CreateOutwardEntry" asp-route-salesOrderId="@order.Id" class="btn btn-primary btn-sm"><i class="fas fa-truck"></i> Create Outward</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Pagination *@
+        <nav aria-label="Sales Order Pagination">
+            <ul class="pagination justify-content-center">
+                @if (Model.PageIndex > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageIndex - 1)" asp-route-searchString="@Model.SearchString" asp-route-status="@Model.Status"><i class="fas fa-chevron-left"></i> Previous</a>
+                    </li>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-searchString="@Model.SearchString" asp-route-status="@Model.Status">@i</a>
+                    </li>
+                }
+
+                @if (Model.PageIndex < Model.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageIndex + 1)" asp-route-searchString="@Model.SearchString" asp-route-status="@Model.Status">Next <i class="fas fa-chevron-right"></i></a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+

@@ -112,8 +112,8 @@
                         <th class="text-right">Purchase Value</th>
                         <th class="text-right">Sales Value</th>
                         <th class="text-right">Actual Sales Value</th>
-                        <th class="text-right">Actual Profit</th>
-                        <th class="text-right">Actual Margin</th>
+                        @* <th class="text-right">Actual Profit</th>
+                        <th class="text-right">Actual Margin</th> *@
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -146,8 +146,8 @@
                             <td class="text-right">@purchaseValue.ToString("C")</td>
                             <td class="text-right">@salesValue.ToString("C")</td>
                             <td class="text-right">@actualSalesValue.ToString("C")</td>
-                            <td class="text-right @(actualProfit < 0 ? "text-danger" : "text-success")">@actualProfit.ToString("C")</td>
-                            <td class="text-right @(actualMargin < 0 ? "text-danger" : "text-success")">@actualMargin.ToString("0.00")%</td>
+                          @*   <td class="text-right @(actualProfit < 0 ? "text-danger" : "text-success")">@actualProfit.ToString("C")</td>
+                            <td class="text-right @(actualMargin < 0 ? "text-danger" : "text-success")">@actualMargin.ToString("0.00")%</td> *@
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <a asp-action="Details"
@@ -173,8 +173,8 @@
                         <td class="text-right">@totalInventoryValue.ToString("C")</td>
                         <td class="text-right">@totalPotentialSalesValue.ToString("C")</td>
                         <td class="text-right">@totalSalesValue.ToString("C")</td>
-                        <td class="text-right @(totalActualProfit < 0 ? "text-danger" : "text-success")">@totalActualProfit.ToString("C")</td>
-                        <td class="text-right @(totalActualMarginPercentage < 0 ? "text-danger" : "text-success")">@totalActualMarginPercentage.ToString("0.00")%</td>
+                    @*     <td class="text-right @(totalActualProfit < 0 ? "text-danger" : "text-success")">@totalActualProfit.ToString("C")</td>
+                        <td class="text-right @(totalActualMarginPercentage < 0 ? "text-danger" : "text-success")">@totalActualMarginPercentage.ToString("0.00")%</td> *@
                         <td></td>
                     </tr>
                 </tfoot>

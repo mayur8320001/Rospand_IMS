@@ -43,7 +43,77 @@ namespace Rospand_IMS.Controllers
 
             return View(vendors);
         }
+/*
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickCreate([FromBody] VendorQuickCreateModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return Json(new { success = false, message = string.Join("\n", errors) });
+            }
 
+            // Validate at least one contact method
+            if (string.IsNullOrEmpty(model.VendorEmail) &&
+                string.IsNullOrEmpty(model.CustomerPhone) &&
+                string.IsNullOrEmpty(model.Mobile))
+            {
+                return Json(new { success = false, message = "At least one contact method (email or phone) is required" });
+            }
+
+            try
+            {
+                var vendor = new Vendor
+                {
+                    CompanyName = model.CompanyName,
+                    ContactPersonName = model.ContactPersonName,
+                    VendorEmail = model.VendorEmail,
+                    CustomerPhone = model.CustomerPhone,
+                    Mobile = model.Mobile,
+                    ShippingSameAsBilling = model.ShippingSameAsBilling,
+                    VendorType = model.VendorType,
+                    VendorDisplayName = model.CompanyName,
+                    PaymentTermId = model.PaymentTermId,
+                    CurrencyId = model.CurrencyId,
+                   // CreatedDate = DateTime.Now
+                };
+
+                _context.Add(vendor);
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    id = vendor.Id,
+                    name = vendor.CompanyName
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "An error occurred while saving the vendor: " + ex.Message
+                });
+            }
+        }
+
+        public class VendorQuickCreateModel
+        {
+            public string CompanyName { get; set; }
+            public string ContactPersonName { get; set; }
+            public string VendorEmail { get; set; }
+            public string CustomerPhone { get; set; }
+            public string Mobile { get; set; }
+            public bool ShippingSameAsBilling { get; set; }
+            public string VendorType { get; set; }
+            public int PaymentTermId { get; set; }
+            public int CurrencyId { get; set; }
+        }*/
         // GET: Vendor/Create
         public async Task<IActionResult> Create()
         {
@@ -201,69 +271,7 @@ namespace Rospand_IMS.Controllers
             return View(supplier);
         }
 
-        // GET: Supplier/Create
-   /*     public async Task<IActionResult> Create()
-        {
-            await PopulateViewData();
-            return View();
-        }
-*/
-        // POST: Supplier/Create
-    /*    [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("VendorType,ContactPersonName,Salutation,FirstName,LastName,CompanyName," +
-            "VendorDisplayName,VendorEmail,CustomerPhone,WorkPhone,Mobile,TaxTypeId,TRNNumber,PaymentTermId," +
-            "CurrencyId,OpeningBalance,ShippingSameAsBilling,BillingAddress,ShippingAddress")] Vendor supplier)
-        {
-            if (ModelState.IsValid)
-            {
-                if (supplier.ShippingSameAsBilling && supplier.BillingAddress != null)
-                {
-                    supplier.ShippingAddress = new Address
-                    {
-                        Attention = supplier.BillingAddress.Attention,
-                        ContactNo = supplier.BillingAddress.ContactNo,
-                        CountryId = supplier.BillingAddress.CountryId,
-                        StateId = supplier.BillingAddress.StateId,
-                        CityId = supplier.BillingAddress.CityId,
-                        ZipCode = supplier.BillingAddress.ZipCode,
-                        StreetAddress = supplier.BillingAddress.StreetAddress
-                    };
-                    _context.Add(supplier.ShippingAddress);
-                }
-                else if (supplier.ShippingAddress != null)
-                {
-                    _context.Add(supplier.ShippingAddress);
-                }
-
-                if (supplier.BillingAddress != null)
-                {
-                    _context.Add(supplier.BillingAddress);
-                }
-
-                await _context.SaveChangesAsync();
-
-                if (supplier.BillingAddress != null)
-                {
-                    supplier.BillingAddressId = supplier.BillingAddress.Id;
-                }
-                if (supplier.ShippingAddress != null)
-                {
-                    supplier.ShippingAddressId = supplier.ShippingAddress.Id;
-                }
-
-                _context.Add(supplier);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Supplier created successfully!";
-                return RedirectToAction(nameof(Index));
-            }
-
-            TempData["ErrorMessage"] = "Failed to create supplier. Please check the input data.";
-            await PopulateViewData();
-            return View(supplier);
-        }*/
-
-        // GET: Supplier/Edit/5
+    
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)

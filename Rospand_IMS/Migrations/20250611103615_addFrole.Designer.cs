@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rospand_IMS.Data;
 
@@ -11,9 +12,11 @@ using Rospand_IMS.Data;
 namespace Rospand_IMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250611103615_addFrole")]
+    partial class addFrole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -606,31 +609,16 @@ namespace Rospand_IMS.Migrations
                     b.Property<int>("PageId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("CanAdjust")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanApprove")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanCreate")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanDelete")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanExport")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanRead")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanReceive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanUpdate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewLowStock")
                         .HasColumnType("bit");
 
                     b.HasKey("RoleId", "PageId");
@@ -1359,7 +1347,7 @@ namespace Rospand_IMS.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalPurchases")
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("VendorDisplayName")
                         .IsRequired()

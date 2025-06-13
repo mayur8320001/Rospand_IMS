@@ -33,6 +33,20 @@ namespace Rospand_IMS.Models
         public List<InventoryViewModel> AvailableProducts { get; set; } = new List<InventoryViewModel>();
     }
 
+    public class SalesOrderIndexViewModel
+    {
+        public List<SalesOrder> SalesOrders { get; set; }
+
+        [Display(Name = "Search")]
+        public string SearchString { get; set; }
+
+        [Display(Name = "Status")]
+        public SalesOrderStatus? Status { get; set; }
+        public int PageIndex { get; set; }
+        public int TotalPages { get; set; }
+    }
+
+
     public class SalesOrderItemViewModel
     {
         public int ProductId { get; set; }

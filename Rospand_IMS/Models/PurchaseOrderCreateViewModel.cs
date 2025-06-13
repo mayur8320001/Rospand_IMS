@@ -4,6 +4,19 @@ using System.ComponentModel.DataAnnotations;
 namespace Rospand_IMS.Models
 {
 
+
+    public class PurchaseOrderIndexViewModel
+    {
+        public List<PurchaseOrder> PurchaseOrders { get; set; }
+        public int PageIndex { get; set; }
+        public int TotalPages { get; set; }
+        public string Status { get; set; }
+        public string SortBy { get; set; }
+        public string SortOrder { get; set; }
+
+    }
+
+
     public class PurchaseOrderCreateViewModel
     {
         public int Id { get; set; }

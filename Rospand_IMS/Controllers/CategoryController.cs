@@ -1,4 +1,5 @@
 ﻿using global::Rospand_IMS.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
@@ -6,7 +7,7 @@ using Rospand_IMS.Data;
 
 namespace Rospand_IMS.Controllers
 {
- 
+    [Authorize(Policy = "CategoryRead")]
     public class CategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,7 +17,7 @@ namespace Rospand_IMS.Controllers
             _context = context;
         }
 
-        // GET: Category
+    
         public async Task<IActionResult> Index()
         {
             // Check for temp data messages to display with SweetAlert
@@ -54,14 +55,17 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: Category/Create
+        [Authorize(Policy = "CategoryCreate")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: Category/Create
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "CategoryCreate")]
         public async Task<IActionResult> Create([Bind("Id,Name,Description")] Category category)
         {
             if (ModelState.IsValid)
@@ -77,7 +81,7 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: Category/Edit/5
-       
+        [Authorize(Policy = "CategoryUpdate")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -98,6 +102,7 @@ namespace Rospand_IMS.Controllers
 
         // POST: Category/Edit/5
         [HttpPost]
+        [Authorize(Policy = "CategoryUpdate")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Category category)
         {
@@ -134,7 +139,7 @@ namespace Rospand_IMS.Controllers
 
         // GET: Category/Delete/5
 
-       
+        [Authorize(Policy = "CategoryDelete")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -158,6 +163,7 @@ namespace Rospand_IMS.Controllers
         // POST: Category/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "CategoryDelete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var category = await _context.Categories.FindAsync(id);
