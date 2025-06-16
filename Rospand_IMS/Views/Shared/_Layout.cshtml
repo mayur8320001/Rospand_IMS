@@ -1,52 +1,4 @@
-﻿@using System.Security.Claims        
-@{
-    // if (!User.Identity.IsAuthenticated)
-    // {
-    //     Context.Response.Redirect("/Login");
-    // }
-    var userPermissions = User.Claims
-        .Where(c => c.Type == "Permission")
-        .Select(c => c.Value)
-        .ToList();
-
-    bool HasPermission(string controller, string action)
-    {
-        // If user is SuperAdmin, they have all permissions
-        if (User.IsInRole("SuperAdmin"))
-        {
-            return true;
-        }
-
-        // Map actions to permission suffixes
-        var actionMap = new Dictionary<string, string>
-        {
-            { "Index", "Read" },
-            { "Details", "Read" },
-            { "Create", "Create" },
-            { "Edit", "Update" },
-            { "Update", "Update" },
-            { "Delete", "Delete" },
-            { "Adjust", "Adjust" },
-            { "LowStock", "ViewLowStock" },
-            { "ReceiveOrder", "Receive" }
-        };
-
-        // Get the permission suffix for this action
-        if (!actionMap.TryGetValue(action, out var permissionSuffix))
-        {
-            // Default to Read if action not mapped
-            permissionSuffix = "Read";
-        }
-
-        // Build the full permission string (e.g., "Inventory:CanAdjust")
-        var requiredPermission = $"{controller}:Can{permissionSuffix}";
-
-        // Check if user has this permission
-        return userPermissions.Contains(requiredPermission);
-    }
-}
-   
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -59,177 +11,25 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Rospand_IMS.styles.css" asp-append-version="true" />
     <style>
-        :root {
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 70px;
-            --header-height: 70px;
-            --primary-color: #4e73df;
-            --secondary-color: #f8f9fc;
-            --accent-color: #2e59d9;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            overflow-x: hidden;
-        }
-
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--header-height);
-            z-index: 1000;
-            background: white;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-        }
-
-        .logo-img {
-            max-height: 40px;
-            object-fit: contain;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: var(--header-height);
-            left: 0;
-            bottom: 0;
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
-            color: white;
-            transition: all 0.3s;
-            z-index: 999;
-            overflow-y: auto;
-        }
-
-            .sidebar.collapsed {
-                width: var(--sidebar-collapsed-width);
-            }
-
-                .sidebar.collapsed .nav-link-text,
-                .sidebar.collapsed .dropdown-toggle::after {
-                    display: none;
-                }
-
-                .sidebar.collapsed .nav-link {
-                    justify-content: center;
-                }
-
-                .sidebar.collapsed .dropdown-menu {
-                    display: none !important;
-                }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            margin-top: var(--header-height);
-            padding: 20px;
-            min-height: calc(100vh - var(--header-height));
-            transition: all 0.3s;
-            background-color: #f5f7fa;
-        }
-
-            .main-content.expanded {
-                margin-left: var(--sidebar-collapsed-width);
-            }
-
-        .navbar-nav {
-            width: 100%;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-            .nav-link:hover, .nav-link:focus {
-                color: white !important;
-                background-color: rgba(255, 255, 255, 0.1);
-            }
-
-            .nav-link i {
-                font-size: 0.85rem;
-                margin-right: 0.5rem;
-                width: 20px;
-                text-align: center;
-            }
-
-        .dropdown-menu {
-            background-color: var(--accent-color);
-            border: none;
-            border-radius: 0;
-            margin: 0;
-            padding: 0;
-        }
-
-        .dropdown-item {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 0.5rem 1rem 0.5rem 2rem;
-        }
-
-            .dropdown-item:hover, .dropdown-item:focus {
-                background-color: rgba(255, 255, 255, 0.1);
-                color: white;
-            }
-
-        .dropdown-divider {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-toggle {
-            background: none;
-            border: none;
-            color: var(--primary-color);
-            font-size: 1.25rem;
-            cursor: pointer;
-        }
-
-        @@media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-                .sidebar.collapsed {
-                    transform: translateX(0);
-                    width: var(--sidebar-collapsed-width);
-                }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-                .main-content.expanded {
-                    margin-left: var(--sidebar-collapsed-width);
-                }
-        }
+     
+  
     </style>
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header class="header d-flex justify-content-between align-items-center px-4 shadow-sm">
-        <nav class="d-flex align-items-center">
-            <a class="nav-link p-0 me-4" asp-area="" asp-controller="Home" asp-action="Index" aria-label="Rospand IMS Home">
-                <img src="@Url.Content("~/images/rlogo.jpg")" alt="Rospand IMS Logo" class="logo-img" />
-            </a>
-            <button class="sidebar-toggle btn btn-sm" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-        <div>
-            @if (User.Identity.IsAuthenticated)
-            {
-                <span class="me-3">Hello, @User.Identity.Name</span>
-                <a href="#" onclick="logout()" class="btn btn-sm btn-outline-primary">Logout</a>
-            }
-         
+    <header class="header">
+        <div class="header-container container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="@Url.Content("~/images/rlogo.jpg")" alt="Rospand IMS Logo" class="logo-img" />
+                </a>
+                <button class="sidebar-toggle ms-3" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="d-flex align-items-center">
+                <partial name="_LoginPartial.cshtml" />
+            </div>
         </div>
     </header>
 
@@ -243,136 +43,103 @@
                     </a>
                 </li>
 
-                @if (userPermissions.Any(p => p.StartsWith("Category:") || p.StartsWith("Product:") || p.StartsWith("Unit:") ||
-                                p.StartsWith("PaymentTerm:") || p.StartsWith("Tax:") || p.StartsWith("Country:") ||
-                                p.StartsWith("State:") || p.StartsWith("City:")))
-                {
+@*   <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                        <i class="fas fa-user"></i>
+                        <span class="nav-link-text">Privacy</span>
+                    </a>
+                </li> *@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="masterPagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-cubes"></i>
                             <span class="nav-link-text">Master Pages</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="masterPagesDropdown">
-                            @if (HasPermission("Category", "CanRead"))
-                            {
+ 
                                 <li><a class="dropdown-item" asp-controller="Category" asp-action="Index"><i class="fas fa-tags me-2"></i>Category Master</a></li>
-                            }
-                            @if (HasPermission("Product", "CanRead"))
-                            {
+ 
+
                                 <li><a class="dropdown-item" asp-controller="Product" asp-action="Index"><i class="fas fa-boxes me-2"></i>Product Master</a></li>
-                            }
-                            @if (HasPermission("Unit", "CanRead"))
-                            {
+                          
                                 <li><a class="dropdown-item" asp-controller="Units" asp-action="Index"><i class="fas fa-weight-hanging me-2"></i>Unit Master</a></li>
-                            }
-                            @if (HasPermission("PaymentTerm", "CanRead"))
-                            {
+                            
+                          
                                 <li><a class="dropdown-item" asp-controller="PaymentTerms" asp-action="Index"><i class="fas fa-file-invoice-dollar me-2"></i>Payment Terms</a></li>
-                            }
-                            @if (HasPermission("Tax", "CanRead"))
-                            {
+                            
+                          
                                 <li><a class="dropdown-item" asp-controller="Tax" asp-action="Index"><i class="fas fa-percentage me-2"></i>Tax Master</a></li>
-                            }
-                            @if (HasPermission("Country", "CanRead"))
-                            {
+                          
                                 <li><a class="dropdown-item" asp-controller="Country" asp-action="Index"><i class="fas fa-globe me-2"></i>Countries</a></li>
-                            }
-                            @if (HasPermission("State", "CanRead"))
-                            {
+                         
                                 <li><a class="dropdown-item" asp-controller="State" asp-action="Index"><i class="fas fa-map-marked me-2"></i>States</a></li>
-                            }
-                            @if (HasPermission("City", "CanRead"))
-                            {
+                        
                                 <li><a class="dropdown-item" asp-controller="City" asp-action="Index"><i class="fas fa-city me-2"></i>Cities</a></li>
-                            }
+                            
                         </ul>
                     </li>
-                }
-
-                @if (userPermissions.Any(p => p.StartsWith("Inventory:")))
-                {
+             
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-warehouse"></i>
                             <span class="nav-link-text">Inventory</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
-                            @if (HasPermission("Inventory", "CanRead"))
-                            {
+                         
                                 <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Index"><i class="fas fa-clipboard-list me-2"></i>Stock Overview</a></li>
-                            }
-                            @if (HasPermission("Inventory", "CanAdjust"))
-                            {
+                         
                                 <li><a class="dropdown-item" asp-controller="Inventory" asp-action="Adjust"><i class="fas fa-sliders-h me-2"></i>Adjust Stock</a></li>
-                            }
-                            @if (HasPermission("Inventory", "CanViewLowStock"))
-                            {
+                        
                                 <li><a class="dropdown-item" asp-controller="Inventory" asp-action="LowStock"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert</a></li>
-                            }
+                           
                         </ul>
                     </li>
-                }
-
-                @if (userPermissions.Any(p => p.StartsWith("Customer:") || p.StartsWith("SalesOrder:")))
-                {
-                    <li class="nav-item dropdown">
+               <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="nav-link-text">Sales</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="salesDropdown">
-                            @if (HasPermission("Customer", "CanRead"))
-                            {
+                           
                                 <li><a class="dropdown-item" asp-controller="Customer" asp-action="Index"><i class="fas fa-users me-2"></i>Customer Master</a></li>
-                            }
-                            @if (HasPermission("SalesOrder", "CanRead"))
-                            {
+                            
+                         
                                 <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="Index"><i class="fas fa-file-invoice me-2"></i>Sales Orders</a></li>
-                            }
-                            @if (HasPermission("SalesOrder", "CanCreate"))
-                            {
+                            
+                        
                                 <li><a class="dropdown-item" asp-controller="SalesOrder" asp-action="Create"><i class="fas fa-plus-circle me-2"></i>Create Order</a></li>
-                            }
+                         
                         </ul>
                     </li>
-                }
+           
 
-                @if (userPermissions.Any(p => p.StartsWith("Vendor:") || p.StartsWith("PurchaseOrder:")))
-                {
+              
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="purchaseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-shopping-basket"></i>
                             <span class="nav-link-text">Purchase</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="purchaseDropdown">
-                            @if (HasPermission("Vendor", "CanRead"))
-                            {
+                        
                                 <li><a class="dropdown-item" asp-controller="Vendor" asp-action="Index"><i class="fas fa-truck me-2"></i>Vendor Master</a></li>
-                            }
-                            @if (HasPermission("PurchaseOrder", "CanRead"))
-                            {
+                      
                                 <li><a class="dropdown-item" asp-controller="PurchaseOrder" asp-action="Index"><i class="fas fa-file-invoice me-2"></i>Purchase Orders</a></li>
-                            }
-                            @if (HasPermission("PurchaseOrder", "CanCreate"))
-                            {
+                         
                                 <li><a class="dropdown-item" asp-controller="PurchaseOrder" asp-action="Create"><i class="fas fa-plus-circle me-2"></i>Create Order</a></li>
-                            }
-                            @if (HasPermission("PurchaseOrder", "CanReceive"))
-                            {
+                          
                                 <li><a class="dropdown-item" asp-controller="PurchaseOrder" asp-action="ReceiveOrder"><i class="fas fa-check-circle me-2"></i>Receive Order</a></li>
-                            }
+                         
                         </ul>
                     </li>
-                }
+              
           
-                    <li class="nav-item dropdown">
+                   @*  <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userMgmtDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-users-cog"></i>
                             <span class="nav-link-text">User Management</span>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="userMgmtDropdown">
                             
-                         @*        <li><a class="dropdown-item" asp-controller="User" asp-action="Index"><i class="fas fa-user me-2"></i>Users</a></li> *@
+                                <li><a class="dropdown-item" asp-controller="User" asp-action="Index"><i class="fas fa-user me-2"></i>Users</a></li>
                             
                         
                                <li><a class="dropdown-item" asp-controller="Auth" asp-action="Register"><i class="fas fa-user-plus me-2"></i>Create New User</a></li>
@@ -381,7 +148,7 @@
                                 <li><a class="dropdown-item" asp-controller="Role" asp-action="Index"><i class="fas fa-user-shield me-2"></i>Role Management</a></li>
                             
                         </ul>
-                    </li>
+                    </li> *@
               
             </ul>
         </nav>
@@ -435,47 +202,8 @@
             });
         });
 
-           $(document).ready(function() {
-            $('#loginForm').submit(function(e) {
-                e.preventDefault();
-
-                const formData = {
-                    username: $('#Username').val(),
-                    password: $('#Password').val()
-                };
-
-                $.ajax({
-                    url: '/auth/login',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    success: function(response) {
-                        // Store the token and redirect
-                        localStorage.setItem('authToken', response.token);
-                        window.location.href = '/';
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Login Failed',
-                            text: xhr.responseJSON?.message || 'Invalid credentials'
-                        });
-                    }
-                });
-            });
-        });
-                function logout() {
-            localStorage.removeItem('authToken');
-            window.location.href = '/login';
-        }
-                $.ajaxSetup({
-            beforeSend: function(xhr) {
-                const token = localStorage.getItem('authToken');
-                if (token) {
-                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                }
-            }
-        });
+         
+       
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -11,285 +11,262 @@
     <meta charset="utf-8" />
     <title>Purchase Order - @Model.PONumber</title>
     <style>
-        /* Print-specific styling */
+        /* Base styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .no-print {
+            text-align: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+            margin-bottom: 15px;
+        }
+
+        .container {
+            width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .company-info {
+            width: 60%;
+        }
+
+        .company-info h1 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+
+        .po-info {
+            width: 35%;
+            text-align: right;
+        }
+
+        .po-info h2 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .po-number {
+            font-size: 14px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: left;
+            padding: 5px;
+            font-size: 11px;
+        }
+
+        td {
+            padding: 5px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .totals-table {
+            width: 250px;
+            margin-left: auto;
+            margin-top: 10px;
+        }
+
+        .totals-row {
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 3px;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: white;
+            font-size: 10px;
+            display: inline-block;
+        }
+
+        /* Print-specific adjustments */
         @@media print {
             body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
+                font-size: 11px;
+                background: none;
                 color: #000;
-                font-size: 12pt;
-                line-height: 1.4;
             }
 
             .no-print {
-                display: none !important;
+                display: none;
+            }
+
+            .container {
+                padding: 0;
+                width: 100%;
             }
 
             .header {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 20pt;
-                border-bottom: 1pt solid #ddd;
-                padding-bottom: 10pt;
-            }
-
-            .company-info {
-                width: 60%;
-            }
-
-                .company-info h2 {
-                    margin: 0 0 5pt 0;
-                    color: #333;
-                }
-
-            .po-info {
-                width: 35%;
-                text-align: right;
-            }
-
-                .po-info h2 {
-                    margin: 0 0 5pt 0;
-                    color: #333;
-                }
-
-            .section {
-                margin-bottom: 15pt;
-                page-break-inside: avoid;
-            }
-
-            .section-title {
-                font-weight: bold;
-                border-bottom: 1pt solid #ddd;
-                padding-bottom: 3pt;
-                margin-bottom: 8pt;
-                font-size: 13pt;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
             }
 
             table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 15pt;
                 page-break-inside: avoid;
-            }
-
-            th, td {
-                border: 1pt solid #ddd;
-                padding: 6pt;
-                text-align: left;
-                font-size: 11pt;
-            }
-
-            th {
-                background-color: #f2f2f2;
-                font-weight: bold;
-            }
-
-            .text-right {
-                text-align: right;
-            }
-
-            .totals {
-                width: 50%;
-                margin-left: auto;
-            }
-
-            .footer {
-                margin-top: 30pt;
-                padding-top: 15pt;
-                border-top: 1pt solid #ddd;
-                display: flex;
-                justify-content: space-between;
-                page-break-inside: avoid;
-            }
-
-            .signature {
-                width: 45%;
-                text-align: center;
-            }
-
-            .status-badge {
-                padding: 3pt 6pt;
-                border-radius: 2pt;
-                font-weight: bold;
-                color: white;
-                font-size: 10pt;
             }
 
             @@page {
                 size: A4;
-                margin: 15mm 10mm;
-            }
-
-            @@page :first {
-                margin-top: 0;
-            }
-        }
-
-        /* Screen styling for print preview */
-        @@media screen {
-            body {
-                font-family: Arial, sans-serif;
-                margin: 20px;
-                padding: 20px;
-                color: #333;
-                background-color: #fff;
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0 auto;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            }
-
-            .no-print {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            .header {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 30px;
-                border-bottom: 1px solid #ddd;
-                padding-bottom: 15px;
-            }
-
-            .company-info h2 {
-                margin: 0 0 8px 0;
-                color: #333;
-            }
-
-            .po-info h2 {
-                margin: 0 0 8px 0;
-                color: #333;
-            }
-
-            .section {
-                margin-bottom: 20px;
-            }
-
-            .section-title {
-                font-weight: bold;
-                border-bottom: 1px solid #ddd;
-                padding-bottom: 5px;
-                margin-bottom: 10px;
-                font-size: 14pt;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 20px;
-            }
-
-            th, td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-
-            th {
-                background-color: #f2f2f2;
-                font-weight: bold;
-            }
-
-            .totals {
-                width: 50%;
-                margin-left: auto;
-            }
-
-            .footer {
-                margin-top: 50px;
-                padding-top: 20px;
-                border-top: 1px solid #ddd;
-                display: flex;
-                justify-content: space-between;
-            }
-
-            .signature {
-                width: 45%;
-                text-align: center;
-            }
-
-            .status-badge {
-                padding: 5px 10px;
-                border-radius: 3px;
-                font-weight: bold;
-                color: white;
+                margin: 10mm;
             }
         }
     </style>
 </head>
 <body>
     <div class="no-print">
-        <button onclick="window.print()" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Print</button>
-        <button onclick="window.close()" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+        <button onclick="window.print()" style="padding: 6px 12px; background-color: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 8px; font-size: 12px;">Print Purchase Order</button>
+        <button onclick="window.close()" style="padding: 6px 12px; background-color: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Close Window</button>
     </div>
 
-    <div class="header">
-        <div class="company-info">
-            <h2>Rospand IMS</h2>
-            <p>123 Business Street</p>
-            <p>City, State ZIP</p>
-            <p>Phone: (123) 456-7890</p>
+    <div class="container">
+        <div class="header">
+            <div class="company-info">
+                <h1>ROSPAND FINOVATE</h1>
+                <p>123 Business Street, City, State ZIP<br>
+                Phone: (123) 456-7890 | Email: info@rospand.com<br>
+                Tax ID: 12-3456789</p>
+            </div>
+            <div class="po-info">
+                <h2>PURCHASE ORDER</h2>
+                <p class="po-number">PO #: @Model.PONumber</p>
+                <p><strong>Date:</strong> @Model.OrderDate.ToString("MM/dd/yyyy")</p>
+                <p><strong>Due Date:</strong> @Model.ExpectedDeliveryDate.ToString("MM/dd/yyyy")</p>
+                <p>
+                    <strong>Status:</strong>
+                    <span class="status-badge" style="background-color: @GetStatusColor(Model.Status)">
+                        @Model.Status
+                    </span>
+                </p>
+            </div>
         </div>
-        <div class="po-info">
-            <h2>PURCHASE ORDER</h2>
-            <p><strong>PO #:</strong> @Model.PONumber</p>
-            <p><strong>Date:</strong> @Model.OrderDate.ToString("d")</p>
-            <p>
-                <strong>Status:</strong>
-                <span class="status-badge" style="background-color: @GetStatusColor(Model.Status)">
-                    @Model.Status
-                </span>
-            </p>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div style="width: 48%;">
+                <div class="section-title">BILL TO</div>
+                <p style="font-weight: bold; margin-bottom: 3px;">@Model.Vendor.CompanyName</p>
+                <p>Attn: @Model.Vendor.ContactPersonName</p>
+                <p>@Model.Vendor.BillingAddress?.StreetAddress</p>
+                <p>@Model.Vendor.BillingAddress?.City, @Model.Vendor.BillingAddress?.State?.Name @Model.Vendor.BillingAddress?.ZipCode</p>
+                <p>Phone: @Model.Vendor.CustomerPhone</p>
+                <p>Email: @Model.Vendor.VendorEmail</p>
+            </div>
+            <div style="width: 48%;">
+                <div class="section-title">SHIP TO</div>
+                <p style="font-weight: bold; margin-bottom: 3px;">Rospand IMS</p>
+                <p>Warehouse Department</p>
+                <p>456 Receiving Street</p>
+                <p>City, State ZIP</p>
+                <p>Phone: (123) 456-7890 ext. 2</p>
+            </div>
         </div>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Vendor Information</div>
-        <div>
-            <p><strong>@Model.Vendor.CompanyName</strong></p>
-            <p>@Model.Vendor.ContactPersonName</p>
-            <p>@Model.Vendor.BillingAddress?.StreetAddress</p>
-            <p>@Model.Vendor.BillingAddress?.City, @Model.Vendor.BillingAddress?.State?.Name @Model.Vendor.BillingAddress?.ZipCode</p>
-            <p>Phone: @Model.Vendor.CustomerPhone</p>
-            <p>Email: @Model.Vendor.VendorEmail</p>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Order Details</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Discount</th>
-                    <th>Tax</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Items)
-                {
-                    var lineSubtotal = item.Quantity * item.UnitPrice * (1 - item.DiscountPercent / 100);
-                    var lineTotal = lineSubtotal * (1 + item.TaxRate / 100);
-
-                    <tr>
-                        <td>@item.Product.Name</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.UnitPrice.ToString("C")</td>
-                        <td>@item.DiscountPercent.ToString("0.##")%</td>
-                        <td>@item.TaxRate.ToString("0.##")%</td>
-                        <td>@lineTotal.ToString("C")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <div class="totals">
+        <div class="section">
+            <div class="section-title">ORDER DETAILS</div>
             <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 35%;">Item Description</th>
+                        <th style="width: 10%; text-align: center;">Qty</th>
+                        <th style="width: 12%; text-align: right;">Unit Price</th>
+                        <th style="width: 10%; text-align: center;">Disc.%</th>
+                        <th style="width: 10%; text-align: center;">Tax</th>
+                        <th style="width: 18%; text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int itemCount = 1;
+                        decimal orderTotal = 0;
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        var lineSubtotal = item.Quantity * item.UnitPrice * (1 - item.DiscountPercent / 100);
+                        var lineTotal = lineSubtotal * (1 + item.TaxRate / 100);
+                        orderTotal += lineTotal;
+
+                        <tr>
+                            <td>@(itemCount++)</td>
+                            <td>@item.Product.Name<br><small style="color: #777;">SKU: @item.Product.SKU</small></td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-right">@item.UnitPrice.ToString("C")</td>
+                            <td class="text-center">@item.DiscountPercent.ToString("0.##")%</td>
+                            <td class="text-center">@item.TaxRate.ToString("0.##")%</td>
+                            <td class="text-right">@lineTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <table class="totals-table">
                 <tr>
                     <td><strong>Subtotal:</strong></td>
                     <td class="text-right">@Model.SubTotal.ToString("C")</td>
@@ -298,38 +275,42 @@
                     <td><strong>Tax:</strong></td>
                     <td class="text-right">@Model.TaxAmount.ToString("C")</td>
                 </tr>
-                <tr>
-                    <td><strong>Total:</strong></td>
-                    <td class="text-right">@Model.TotalAmount.ToString("C")</td>
+                <tr style="border-top: 1px solid #333;">
+                    <td><strong>GRAND TOTAL:</strong></td>
+                    <td class="text-right"><strong>@Model.TotalAmount.ToString("C")</strong></td>
                 </tr>
             </table>
         </div>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Shipping Information</div>
-        <p><strong>Expected Delivery Date:</strong> @Model.ExpectedDeliveryDate.ToString("d")</p>
-        <p><strong>Shipping Method:</strong> Standard</p>
-    </div>
-
-    @if (!string.IsNullOrEmpty(Model.Notes))
-    {
-        <div class="section">
-            <div class="section-title">Notes</div>
-            <p>@Model.Notes</p>
+        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+            <div style="width: 48%;">
+                <div class="section-title">SHIPPING INFORMATION</div>
+                <p><strong>Shipping Method:</strong> Standard Ground</p>
+                <p><strong>Shipping Terms:</strong> FOB Destination</p>
+                <p><strong>Expected Delivery:</strong> @Model.ExpectedDeliveryDate.ToString("MM/dd/yyyy")</p>
+            </div>
+            <div style="width: 48%;">
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div class="section-title">NOTES</div>
+                    <p style="white-space: pre-line; font-size: 11px;">@Model.Notes</p>
+                }
+            </div>
         </div>
-    }
 
-    <div class="footer">
-        <div class="signature">
-            <p>_________________________</p>
-            <p>Vendor Signature</p>
-            <p>Date: ___________________</p>
-        </div>
-        <div class="signature">
-            <p>_________________________</p>
-            <p>Authorized Signature</p>
-            <p>Date: ___________________</p>
+        <div class="footer">
+            <div class="signature">
+                <p><strong>VENDOR AUTHORIZATION</strong></p>
+                <div class="signature-line"></div>
+                <p>Authorized Signature & Company Stamp</p>
+                <p>Date: _________________________</p>
+            </div>
+            <div class="signature">
+                <p><strong>ROSPAND IMS AUTHORIZATION</strong></p>
+                <div class="signature-line"></div>
+                <p>Authorized Signature</p>
+                <p>Date: _________________________</p>
+            </div>
         </div>
     </div>
 </body>
@@ -340,14 +321,14 @@
     {
         return status switch
         {
-            PurchaseOrderStatus.Draft => "#6c757d",
-            PurchaseOrderStatus.Submitted => "#007bff",
-            PurchaseOrderStatus.Approved => "#17a2b8",
-            PurchaseOrderStatus.Ordered => "#ffc107",
-            PurchaseOrderStatus.PartiallyReceived => "#fd7e14",
-            PurchaseOrderStatus.Received => "#28a745",
-            PurchaseOrderStatus.Cancelled => "#dc3545",
-            _ => "#6c757d",
+            PurchaseOrderStatus.Draft => "#95a5a6",
+            PurchaseOrderStatus.Submitted => "#3498db",
+            PurchaseOrderStatus.Approved => "#1abc9c",
+            PurchaseOrderStatus.Ordered => "#f39c12",
+            PurchaseOrderStatus.PartiallyReceived => "#e67e22",
+            PurchaseOrderStatus.Received => "#2ecc71",
+            PurchaseOrderStatus.Cancelled => "#e74c3c",
+            _ => "#95a5a6",
         };
     }
 }

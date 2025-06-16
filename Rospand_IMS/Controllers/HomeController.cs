@@ -1,25 +1,32 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Rospand_IMS.Areas.Identity.Data;
 using Rospand_IMS.Data;
 
 
 namespace Rospand_IMS.Controllers
 {
- /*   [Authorize(Policy = "Dashboard:Read")]*/
-    public class HomeController : Controller
+    /*   [Authorize(Policy = "Dashboard:Read")]*/
+    [Authorize]
+      public class HomeController : Controller
     {
-        private readonly ApplicationDbContext _context;
-      //  private readonly ILogger<HomeController> _logger;
+    //  private readonly ApplicationDbContext _context;
+       private readonly ILogger<HomeController> _logger;
+       private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ApplicationDbContext context)
+        public HomeController(UserManager<ApplicationUser> userManager, ILogger<HomeController> logger)
         {
-            _context = context;
-            //   , ILogger<HomeController> logger   _logger = logger;
+          //  _context = context;
+            _logger = logger;
+            this._userManager = userManager;
+
+
         }
 
         public async Task<IActionResult> Index()
         {
-            
+           ViewData["UserId"] = _userManager.GetUserId(this.User);
             return View();
         }
 

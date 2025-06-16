@@ -1,0 +1,224 @@
+﻿@model Rospand_IMS.Models.SalesOrderDetailsViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = $"Sales Order #{Model.SalesOrder.SONumber}";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .document-title {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+
+        .row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .col-2 {
+            flex: 2;
+        }
+
+        .col-3 {
+            flex: 3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">Your Company Name</div>
+        <div class="document-title">Sales Order #@Model.SalesOrder.SONumber</div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="section">
+                <div class="section-title">Customer Information</div>
+                <div>@Model.SalesOrder.Customer.CustomerDisplayName</div>
+                <div>@Model.SalesOrder.Customer.BillingAddress</div>
+                <div>@Model.SalesOrder.Customer.ShippingAddress</div>
+
+                <div>@Model.SalesOrder.Customer.Mobile</div>
+                <div>@Model.SalesOrder.Customer.CustomerEmail</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="section">
+                <div class="section-title">Order Information</div>
+                <div><strong>Order Date:</strong> @Model.SalesOrder.OrderDate.ToString("d")</div>
+                <div><strong>Expected Delivery:</strong> @(Model.SalesOrder.ExpectedDeliveryDate?.ToString("d") ?? "N/A")</div>
+                <div><strong>Status:</strong> <span class="status-badge">@Model.SalesOrder.Status</span></div>
+                <div><strong>Currency:</strong> @Model.SalesOrder.Currency?.Code</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Order Items</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Discount</th>
+                    <th>Tax</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.SalesOrder.Items)
+                {
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Product.SKU</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("N2")</td>
+                        <td>@item.DiscountPercent%</td>
+                        <td>@item.TaxRate%</td>
+                        <td>@item.LineTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" class="text-right"><strong>Subtotal:</strong></td>
+                    <td>@Model.SalesOrder.SubTotal.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-right"><strong>Tax:</strong></td>
+                    <td>@Model.SalesOrder.TaxAmount.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-right"><strong>Total:</strong></td>
+                    <td>@Model.SalesOrder.TotalAmount.ToString("N2")</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    @if (Model.SalesOrder.OutwardEntries.Any())
+    {
+        <div class="section">
+            <div class="section-title">Dispatch Information</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Outward #</th>
+                        <th>Date</th>
+                        <th>Warehouse</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.SalesOrder.OutwardEntries.OrderBy(e => e.OutwardDate))
+                    {
+                        <tr>
+                            <td>@entry.OutwardNumber</td>
+                            <td>@entry.OutwardDate.ToString("d")</td>
+                            <td>@entry.Warehouse?.Name</td>
+                            <td>@entry.Status</td>
+                            <td>
+                                @foreach (var item in entry.Items)
+                                {
+                                    <div>@item.Product.Name (x@item.Quantity)</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.SalesOrder.Notes))
+    {
+        <div class="section">
+            <div class="section-title">Notes</div>
+            <div>@Model.SalesOrder.Notes</div>
+        </div>
+    }
+
+    <div class="footer">
+        Generated on @DateTime.Now.ToString("yyyy-MM-dd HH:mm") | Your Company Name
+    </div>
+</body>
+</html>

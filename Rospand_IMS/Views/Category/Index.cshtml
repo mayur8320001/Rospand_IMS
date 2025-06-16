@@ -1,51 +1,5 @@
 ﻿@model IEnumerable<Rospand_IMS.Models.Category>
-@using System.Security.Claims
-@{
-    if (!User.Identity.IsAuthenticated)
-    {
-        Context.Response.Redirect("/Login");
-    }
-    var userPermissions = User.Claims
-        .Where(c => c.Type == "Permission")
-        .Select(c => c.Value)
-        .ToList();
 
-    bool HasPermission(string controller, string action)
-    {
-        // If user is SuperAdmin, they have all permissions
-        if (User.IsInRole("SuperAdmin"))
-        {
-            return true;
-        }
-
-        // Map actions to permission suffixes
-        var actionMap = new Dictionary<string, string>
-        {
-            { "Index", "Read" },
-            { "Details", "Read" },
-            { "Create", "Create" },
-            { "Edit", "Update" },
-            { "Update", "Update" },
-            { "Delete", "Delete" },
-            { "Adjust", "Adjust" },
-            { "LowStock", "ViewLowStock" },
-            { "ReceiveOrder", "Receive" }
-        };
-
-        // Get the permission suffix for this action
-        if (!actionMap.TryGetValue(action, out var permissionSuffix))
-        {
-            // Default to Read if action not mapped
-            permissionSuffix = "Read";
-        }
-
-        // Build the full permission string (e.g., "Inventory:CanAdjust")
-        var requiredPermission = $"{controller}:Can{permissionSuffix}";
-
-        // Check if user has this permission
-        return userPermissions.Contains(requiredPermission);
-    }
-}
 @{
     ViewData["Title"] = "Category Master";
 }
@@ -54,10 +8,7 @@
 <h1 class="text-center my-4">@ViewData["Title"]</h1>
 
 <p>
-    @if (HasPermission("Category", "Create"))
-                            {
     <a asp-action="Create" class="btn btn-primary">Create New</a>
-                            }
 </p>
 <partial name="_NotificationPartial" />
 <table class="table">
@@ -75,13 +26,9 @@
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
                 <td>@Html.DisplayFor(modelItem => item.Description)</td>
                 <td>
-                    @if (HasPermission("Category", "Update")){
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-        }
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                        @if (HasPermission("Category", "Delete")){
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                    }
                 </td>
             </tr>
         }

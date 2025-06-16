@@ -1,17 +1,21 @@
 ﻿using DinkToPdf;
 using DinkToPdf.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
+using Rospand_IMS.Pagination;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
+    [Authorize]
     public class PurchaseOrderController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,8 +28,10 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: PurchaseOrder
-        public async Task<IActionResult> Index(PurchaseOrderStatus? status)
+        public async Task<IActionResult> Index(PurchaseOrderStatus? status, int? pageNumber)
         {
+            int pageSize = 12; // You can adjust this number based on how many cards you want per page
+
             var query = _context.PurchaseOrders
                 .Include(po => po.Vendor)
                 .Include(po => po.Currency)
@@ -38,7 +44,7 @@ namespace Rospand_IMS.Controllers
             }
 
             ViewBag.StatusFilter = status;
-            return View(await query.ToListAsync());
+            return View(await PaginatedList<PurchaseOrder>.CreateAsync(query, pageNumber ?? 1, pageSize));
         }
 
         // GET: PurchaseOrder/Create
@@ -444,6 +450,140 @@ namespace Rospand_IMS.Controllers
             return View(order);
         }
 
+
+
+        [HttpGet]
+        public IActionResult DownloadPurchaseOrderPdf(int id)
+        {
+            // Get the purchase order from database
+            var purchaseOrder = _context.PurchaseOrders
+                .Include(po => po.Vendor)
+                .Include(po => po.Items)
+                    .ThenInclude(i => i.Product)
+                .FirstOrDefault(po => po.Id == id);
+
+            if (purchaseOrder == null)
+            {
+                return NotFound();
+            }
+
+            // Generate the PDF
+            var pdfBytes = GeneratePurchaseOrderPdf(purchaseOrder);
+
+            // Return as file download
+            return File(pdfBytes, "application/pdf", $"PurchaseOrder_{purchaseOrder.PONumber}.pdf");
+        }
+        private byte[] GeneratePurchaseOrderPdf(PurchaseOrder purchaseOrder)
+        {
+            return QuestPDF.Fluent.Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+               //   page.Size(PageSizes.A4);
+                  // page.Margin(1, Unit.Inch);
+
+                    // Header with company info and PO number
+                    page.Header().Column(column =>
+                    {
+                        column.Item().Row(row =>
+                        {
+                            row.RelativeItem().Text("Your Company Name").FontSize(16).Bold();
+                            row.RelativeItem().Text($"PO #: {purchaseOrder.PONumber}").FontSize(14).AlignRight();
+                        });
+
+                        column.Item().Text("Purchase Order").FontSize(20).Bold().AlignCenter();
+                        column.Item().PaddingBottom(10).LineHorizontal(1);
+                    });
+
+                    // Vendor and date information
+                    page.Content().PaddingVertical(10).Column(column =>
+                    {
+                        column.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(vendorCol =>
+                            {
+                                vendorCol.Item().Text("Vendor:").FontSize(12).Bold();
+                                vendorCol.Item().Text(purchaseOrder.Vendor.VendorDisplayName);
+                                vendorCol.Item().Text(purchaseOrder.Vendor.CompanyName);
+                                vendorCol.Item().Text(purchaseOrder.Vendor.VendorEmail);
+                            });
+
+                            row.RelativeItem().Column(dateCol =>
+                            {
+                                dateCol.Item().Text("PO Date:").FontSize(12).Bold();
+                                dateCol.Item().Text(purchaseOrder.OrderDate.ToString("yyyy-MM-dd"));
+
+                                dateCol.Item().PaddingTop(10).Text("Expected Delivery:").FontSize(12).Bold();
+                                dateCol.Item().Text(purchaseOrder.ExpectedDeliveryDate.ToString("yyyy-MM-dd") ?? "N/A");
+
+                            });
+                        });
+
+                        // Line items table
+                        column.Item().PaddingTop(15).Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(2); // Product
+                                columns.RelativeColumn();   // SKU
+                                columns.RelativeColumn();   // Quantity
+                                columns.RelativeColumn();   // Unit Price
+                                columns.RelativeColumn();   // Total
+                            });
+
+                            // Table header
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Product").Bold();
+                                header.Cell().Text("SKU").Bold();
+                                header.Cell().Text("Qty").Bold();
+                                header.Cell().Text("Unit Price").Bold();
+                                header.Cell().Text("Total").Bold();
+                            });
+
+                            // Table rows
+                            foreach (var item in purchaseOrder.Items)
+                            {
+                                table.Cell().Text(item.Product.Name);
+                                table.Cell().Text(item.Product.SKU);
+                                table.Cell().Text(item.Quantity.ToString());
+                                table.Cell().Text(item.UnitPrice.ToString("C"));
+                                table.Cell().Text((item.Quantity * item.UnitPrice).ToString("C"));
+                            }
+
+                            // Footer with totals
+                            table.Footer(footer =>
+                            {
+                                footer.Cell().ColumnSpan(3).AlignRight().Text("Subtotal:").Bold();
+                                footer.Cell().Text(purchaseOrder.SubTotal.ToString("C"));
+
+                                footer.Cell().ColumnSpan(3).AlignRight().Text("Tax:").Bold();
+                                footer.Cell().Text(purchaseOrder.TaxAmount.ToString("C"));
+
+                                footer.Cell().ColumnSpan(3).AlignRight().Text("Total:").Bold();
+                                footer.Cell().Text(purchaseOrder.TotalAmount.ToString("C")).Bold();
+                            });
+                        });
+
+                        // Notes section
+                        if (!string.IsNullOrEmpty(purchaseOrder.Notes))
+                        {
+                            column.Item().PaddingTop(15).Text("Notes:").FontSize(12).Bold();
+                            column.Item().Text(purchaseOrder.Notes);
+                        }
+                    });
+
+                    // Footer with page numbers
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("Page ");
+                        text.CurrentPageNumber();
+                        text.Span(" of ");
+                        text.TotalPages();
+                    });
+                });
+            }).GeneratePdf();
+        }
         // POST: PurchaseOrder/Submit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -498,7 +638,6 @@ namespace Rospand_IMS.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: PurchaseOrder/Order/5
         // POST: PurchaseOrder/Order/5
         [HttpPost]
         [ValidateAntiForgeryToken]

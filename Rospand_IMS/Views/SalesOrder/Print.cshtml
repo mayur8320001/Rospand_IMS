@@ -1,0 +1,277 @@
+﻿@model Rospand_IMS.Models.SalesOrderDetailsViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = $"Print Sales Order #{Model.SalesOrder.SONumber}";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 15px;
+            line-height: 1.4;
+        }
+
+        .print-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .document-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #2c3e50;
+        }
+
+        .document-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .info-block {
+            width: 48%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .totals-table {
+            width: 250px;
+            margin-left: auto;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: white;
+            font-size: 10px;
+            display: inline-block;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 3px;
+        }
+
+        .no-print {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        @@media print {
+            body {
+                font-size: 11px;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .print-container {
+                padding: 10px;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+
+            @@page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()" style="padding: 6px 12px; background-color: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 8px;">Print</button>
+        <button onclick="window.close()" style="padding: 6px 12px; background-color: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer;">Close</button>
+    </div>
+
+    <div class="print-container">
+        <div class="header">
+            <div class="company-name">ROSPAND FINOVATE</div>
+            <div>123 Business Street, City, Country</div>
+            <div>Phone: (123) 456-7890 | Email: info@yourcompany.com | Tax ID: 12-3456789</div>
+
+            <div class="document-title">SALES ORDER</div>
+        </div>
+
+        <div class="document-info">
+            <div class="info-block">
+                <p><strong>SO Number:</strong> @Model.SalesOrder.SONumber</p>
+                <p><strong>Date:</strong> @Model.SalesOrder.OrderDate.ToString("MMM dd, yyyy")</p>
+                <p>
+                    <strong>Status:</strong>
+                    <span class="status-badge" style="background-color: @GetStatusColor(Model.SalesOrder.Status)">
+                        @Model.SalesOrder.Status
+                    </span>
+                </p>
+            </div>
+            <div class="info-block">
+                <p><strong>Customer:</strong> @Model.SalesOrder.Customer.CustomerDisplayName</p>
+                <p><strong>Contact:</strong> @Model.SalesOrder.Customer.ContactPersonName</p>
+                <p><strong>Delivery Date:</strong> @(Model.SalesOrder.ExpectedDeliveryDate?.ToString("MMM dd, yyyy") ?? "N/A")</p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 30%;">Product</th>
+                    <th style="width: 15%;">SKU</th>
+                    <th style="width: 8%; text-align: center;">Qty</th>
+                    <th style="width: 12%; text-align: right;">Unit Price</th>
+                    <th style="width: 10%; text-align: center;">Disc.%</th>
+                    <th style="width: 10%; text-align: center;">Tax</th>
+                    <th style="width: 15%; text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int rowNum = 1;
+                }
+                @foreach (var item in Model.SalesOrder.Items)
+                {
+                    <tr>
+                        <td>@(rowNum++)</td>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Product.SKU</td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-right">@item.UnitPrice.ToString("N2")</td>
+                        <td class="text-center">@item.DiscountPercent.ToString("N2")%</td>
+                        <td class="text-center">@item.TaxRate.ToString("N2")%</td>
+                        <td class="text-right">@item.LineTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <table class="totals-table">
+            <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td class="text-right">@Model.SalesOrder.SubTotal.ToString("N2")</td>
+            </tr>
+            <tr>
+                <td><strong>Tax:</strong></td>
+                <td class="text-right">@Model.SalesOrder.TaxAmount.ToString("N2")</td>
+            </tr>
+            <tr style="border-top: 1px solid #333;">
+                <td><strong>Total Amount:</strong></td>
+                <td class="text-right"><strong>@Model.SalesOrder.TotalAmount.ToString("N2")</strong></td>
+            </tr>
+        </table>
+
+        @if (!string.IsNullOrEmpty(Model.SalesOrder.Notes))
+        {
+            <div style="margin-top: 20px;">
+                <div style="font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 5px;">Notes</div>
+                <p style="white-space: pre-line; font-size: 11px;">@Model.SalesOrder.Notes</p>
+            </div>
+        }
+
+        <div class="footer">
+            <div class="signature">
+                <p><strong>CUSTOMER AUTHORIZATION</strong></p>
+                <div class="signature-line"></div>
+                <p>Authorized Signature</p>
+                <p>Date: _________________________</p>
+            </div>
+            <div class="signature">
+                <p><strong>ROSPAND FINOVATE</strong></p>
+                <div class="signature-line"></div>
+                <p>Authorized Signature</p>
+                <p>Date: _________________________</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #777;">
+            <p>Thank you for your business!</p>
+            <p>Printed on: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</p>
+        </div>
+    </div>
+</body>
+</html>
+
+@functions {
+    public string GetStatusColor(SalesOrderStatus status)
+    {
+        return status switch
+        {
+            SalesOrderStatus.Draft => "#95a5a6",         // Gray
+                  // Blue
+            SalesOrderStatus.Confirmed => "#1abc9c",     // Teal
+           // SalesOrderStatus.Processing => "#f39c12",    // Orange
+            SalesOrderStatus.PartiallyShipped => "#e67e22", // Dark Orange
+            SalesOrderStatus.Shipped => "#2ecc71",       // Green
+            SalesOrderStatus.Delivered => "#27ae60",      // Dark Green
+            SalesOrderStatus.Cancelled => "#e74c3c",      // Red
+            SalesOrderStatus.OnHold => "#9b59b6",         // Purple
+            _ => "#95a5a6"                               // Default Gray
+        };
+    }
+}

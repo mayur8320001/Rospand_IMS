@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
+    [Authorize]
     public class VendorController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,7 +19,7 @@ namespace Rospand_IMS.Controllers
         {
             _context = context;
         }
-
+       
         private async Task PopulateViewData()
         {
             ViewData["TaxTypeId"] = new SelectList(await _context.TaxTypes.ToListAsync(), "Id", "Name");
@@ -43,77 +46,8 @@ namespace Rospand_IMS.Controllers
 
             return View(vendors);
         }
-/*
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> QuickCreate([FromBody] VendorQuickCreateModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-                return Json(new { success = false, message = string.Join("\n", errors) });
-            }
+     
 
-            // Validate at least one contact method
-            if (string.IsNullOrEmpty(model.VendorEmail) &&
-                string.IsNullOrEmpty(model.CustomerPhone) &&
-                string.IsNullOrEmpty(model.Mobile))
-            {
-                return Json(new { success = false, message = "At least one contact method (email or phone) is required" });
-            }
-
-            try
-            {
-                var vendor = new Vendor
-                {
-                    CompanyName = model.CompanyName,
-                    ContactPersonName = model.ContactPersonName,
-                    VendorEmail = model.VendorEmail,
-                    CustomerPhone = model.CustomerPhone,
-                    Mobile = model.Mobile,
-                    ShippingSameAsBilling = model.ShippingSameAsBilling,
-                    VendorType = model.VendorType,
-                    VendorDisplayName = model.CompanyName,
-                    PaymentTermId = model.PaymentTermId,
-                    CurrencyId = model.CurrencyId,
-                   // CreatedDate = DateTime.Now
-                };
-
-                _context.Add(vendor);
-                await _context.SaveChangesAsync();
-
-                return Json(new
-                {
-                    success = true,
-                    id = vendor.Id,
-                    name = vendor.CompanyName
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "An error occurred while saving the vendor: " + ex.Message
-                });
-            }
-        }
-
-        public class VendorQuickCreateModel
-        {
-            public string CompanyName { get; set; }
-            public string ContactPersonName { get; set; }
-            public string VendorEmail { get; set; }
-            public string CustomerPhone { get; set; }
-            public string Mobile { get; set; }
-            public bool ShippingSameAsBilling { get; set; }
-            public string VendorType { get; set; }
-            public int PaymentTermId { get; set; }
-            public int CurrencyId { get; set; }
-        }*/
         // GET: Vendor/Create
         public async Task<IActionResult> Create()
         {
@@ -183,17 +117,18 @@ namespace Rospand_IMS.Controllers
                 }
 
                 // Handle shipping address
-                if (viewModel.ShippingSameAsBilling && vendor.BillingAddress != null)
+                if (viewModel.ShippingSameAsBilling && viewModel.BillingAddress != null)
                 {
-                    vendor.ShippingAddress = new Address
+                    // Copy billing address to shipping address
+                    viewModel.ShippingAddress = new AddressViewModel
                     {
-                        Attention = vendor.BillingAddress.Attention,
-                        ContactNo = vendor.BillingAddress.ContactNo,
-                        CountryId = vendor.BillingAddress.CountryId,
-                        StateId = vendor.BillingAddress.StateId,
-                        CityId = vendor.BillingAddress.CityId,
-                        ZipCode = vendor.BillingAddress.ZipCode,
-                        StreetAddress = vendor.BillingAddress.StreetAddress
+                        Attention = viewModel.BillingAddress.Attention,
+                        ContactNo = viewModel.BillingAddress.ContactNo,
+                        CountryId = viewModel.BillingAddress.CountryId,
+                        StateId = viewModel.BillingAddress.StateId,
+                        CityId = viewModel.BillingAddress.CityId,
+                        ZipCode = viewModel.BillingAddress.ZipCode,
+                        StreetAddress = viewModel.BillingAddress.StreetAddress
                     };
                     _context.Add(vendor.ShippingAddress);
                 }
@@ -299,8 +234,8 @@ namespace Rospand_IMS.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,VendorType,ContactPersonName,Salutation,FirstName,LastName," +
-     "CompanyName,VendorDisplayName,VendorEmail,CustomerPhone,WorkPhone,Mobile,TaxTypeId,TRNNumber,PaymentTermId," +
-     "CurrencyId,OpeningBalance,ShippingSameAsBilling,BillingAddressId,ShippingAddressId")] Vendor supplier)
+    "CompanyName,VendorDisplayName,VendorEmail,CustomerPhone,WorkPhone,Mobile,TaxTypeId,TRNNumber,PaymentTermId," +
+    "CurrencyId,OpeningBalance,ShippingSameAsBilling,BillingAddressId,ShippingAddressId")] Vendor supplier)
         {
             if (id != supplier.Id)
             {
@@ -328,34 +263,74 @@ namespace Rospand_IMS.Controllers
                     _context.Entry(existingVendor).CurrentValues.SetValues(supplier);
 
                     // Handle billing address
-                    if (supplier.BillingAddressId.HasValue && supplier.BillingAddress != null)
+                    if (supplier.BillingAddress != null)
                     {
                         if (existingVendor.BillingAddress == null)
                         {
-                            existingVendor.BillingAddress = new Address();
+                            // Create new address
+                            existingVendor.BillingAddress = supplier.BillingAddress;
+                            _context.Addresses.Add(existingVendor.BillingAddress);
                         }
-                        _context.Entry(existingVendor.BillingAddress).CurrentValues.SetValues(supplier.BillingAddress);
+                        else
+                        {
+                            // Update existing address without changing its ID
+                            supplier.BillingAddress.Id = existingVendor.BillingAddress.Id;
+                            _context.Entry(existingVendor.BillingAddress).CurrentValues.SetValues(supplier.BillingAddress);
+                        }
+                    }
+                    else if (existingVendor.BillingAddress != null)
+                    {
+                        // Remove existing billing address if new one is null
+                        _context.Addresses.Remove(existingVendor.BillingAddress);
+                        existingVendor.BillingAddress = null;
+                        existingVendor.BillingAddressId = null;
                     }
 
-                    // Handle shipping address based on the ShippingSameAsBilling flag
+                    // Handle shipping address
                     if (supplier.ShippingSameAsBilling)
                     {
-                        if (existingVendor.ShippingAddress == null)
+                        if (existingVendor.BillingAddress == null)
                         {
-                            existingVendor.ShippingAddress = new Address();
+                            TempData["ErrorMessage"] = "Cannot copy billing address to shipping address because billing address is not set.";
+                            await PopulateViewData();
+                            return View(supplier);
                         }
 
-                        // Copy billing address to shipping address
-                        _context.Entry(existingVendor.ShippingAddress).CurrentValues.SetValues(existingVendor.BillingAddress);
+                        if (existingVendor.ShippingAddress == null)
+                        {
+                            // Create new address by copying billing address
+                            existingVendor.ShippingAddress = new Address();
+                            _context.Entry(existingVendor.ShippingAddress).CurrentValues.SetValues(existingVendor.BillingAddress);
+                            _context.Addresses.Add(existingVendor.ShippingAddress);
+                        }
+                        else
+                        {
+                            // Update existing shipping address to match billing address
+                            _context.Entry(existingVendor.ShippingAddress).CurrentValues.SetValues(existingVendor.BillingAddress);
+                        }
                         existingVendor.ShippingAddressId = existingVendor.BillingAddressId;
                     }
                     else if (supplier.ShippingAddress != null)
                     {
                         if (existingVendor.ShippingAddress == null)
                         {
-                            existingVendor.ShippingAddress = new Address();
+                            // Create new address
+                            existingVendor.ShippingAddress = supplier.ShippingAddress;
+                            _context.Addresses.Add(existingVendor.ShippingAddress);
                         }
-                        _context.Entry(existingVendor.ShippingAddress).CurrentValues.SetValues(supplier.ShippingAddress);
+                        else
+                        {
+                            // Update existing address without changing its ID
+                            supplier.ShippingAddress.Id = existingVendor.ShippingAddress.Id;
+                            _context.Entry(existingVendor.ShippingAddress).CurrentValues.SetValues(supplier.ShippingAddress);
+                        }
+                    }
+                    else if (existingVendor.ShippingAddress != null)
+                    {
+                        // Remove existing shipping address if new one is null
+                        _context.Addresses.Remove(existingVendor.ShippingAddress);
+                        existingVendor.ShippingAddress = null;
+                        existingVendor.ShippingAddressId = null;
                     }
 
                     await _context.SaveChangesAsync();
@@ -375,13 +350,18 @@ namespace Rospand_IMS.Controllers
                         throw;
                     }
                 }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Error updating supplier: {ex.Message}";
+                    await PopulateViewData();
+                    return View(supplier);
+                }
             }
 
             TempData["ErrorMessage"] = "Failed to update supplier. Please check the input data.";
             await PopulateViewData();
             return View(supplier);
         }
-
         // GET: Supplier/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {

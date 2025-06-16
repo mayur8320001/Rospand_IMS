@@ -1,0 +1,66 @@
+﻿@model Rospand_IMS.Models.VendorQuickCreateModel
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="quickVendorModalLabel">Quick Add Vendor</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <form id="quickVendorForm" asp-action="QuickCreate" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label asp-for="VendorType" class="control-label"></label>
+                    <select asp-for="VendorType" class="form-control">
+                        <option value="Business">Business</option>
+                        <option value="Individual">Individual</option>
+                    </select>
+                    <span asp-validation-for="VendorType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CompanyName" class="control-label"></label>
+                    <input asp-for="CompanyName" class="form-control" />
+                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="VendorDisplayName" class="control-label"></label>
+                    <input asp-for="VendorDisplayName" class="form-control" />
+                    <span asp-validation-for="VendorDisplayName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label asp-for="VendorEmail" class="control-label"></label>
+                    <input asp-for="VendorEmail" class="form-control" />
+                    <span asp-validation-for="VendorEmail" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Mobile" class="control-label"></label>
+                    <input asp-for="Mobile" class="form-control" />
+                    <span asp-validation-for="Mobile" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CurrencyId" class="control-label"></label>
+                    <select asp-for="CurrencyId" class="form-control" asp-items="ViewBag.Currencies">
+                        <option value="">-- Select Currency --</option>
+                    </select>
+                    <span asp-validation-for="CurrencyId" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+    <button type="button" class="btn btn-primary" id="saveQuickVendor">Save Vendor</button>
+</div>
+
+</div>

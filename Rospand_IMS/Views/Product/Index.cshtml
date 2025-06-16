@@ -59,9 +59,38 @@
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Are you sure you want to delete this product?');" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+<script>
+        function confirmDelete(id, name) {
+        if (confirm(`Are you sure you want to delete the product '${name}'?`)) {
+            // Get the anti-forgery token
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            // Call delete action via AJAX
+            $.ajax({
+                url: '/Product/Delete/' + id,
+                type: 'POST',
+                headers: {
+                    "RequestVerificationToken": token
+                },
+                success: function(result) {
+                    // Reload the page to see changes and notification
+                    window.location.href = '@Url.Action("Index")';
+                },
+                error: function(xhr, status, error) {
+                    // Show error alert immediately
+                    alert('Error deleting product: ' + xhr.responseText);
+                }
+            });
+        }
+        return false;
+    }
+</script>

@@ -1,15 +1,16 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-
+    [Authorize]
     public class SalesOrderController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -901,6 +902,41 @@ namespace Rospand_IMS.Controllers
             _context.Update(salesOrder);
             await _context.SaveChangesAsync();
         }
+
+
+        public async Task<IActionResult> Print(int id)
+        {
+            var salesOrder = await _context.SalesOrders
+                .Include(so => so.Customer)
+                .Include(so => so.Currency)
+                .Include(so => so.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Items)
+                        .ThenInclude(oi => oi.Product)
+                .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Warehouse)
+                .FirstOrDefaultAsync(so => so.Id == id);
+
+            if (salesOrder == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new SalesOrderDetailsViewModel
+            {
+                SalesOrder = salesOrder,
+                TotalOrdered = salesOrder.Items.Sum(i => i.Quantity),
+                TotalDispatched = salesOrder.OutwardEntries
+                    .SelectMany(oe => oe.Items)
+                    .Sum(oi => oi.Quantity),
+                RemainingToDispatch = salesOrder.Items.Sum(i => i.Quantity) -
+                    salesOrder.OutwardEntries.SelectMany(oe => oe.Items).Sum(oi => oi.Quantity)
+            };
+
+            return View(viewModel);
+        }
+
 
         private async Task<SelectList> GetWarehousesSelectList()
         {

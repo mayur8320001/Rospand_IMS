@@ -5,9 +5,11 @@
         public string? Attention { get; set; }
         public string? ContactNo { get; set; }
         public int? CountryId { get; set; }
-        public int? StateId { get; set; }
+        public int? StateId { get; set; }       // Foreign key to State
+        public string? StateCode { get; set; }  // Added for filtering or display
         public int? CityId { get; set; }
         public string? ZipCode { get; set; }
         public string? StreetAddress { get; set; }
     }
+
 }

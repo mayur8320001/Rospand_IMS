@@ -13,6 +13,7 @@ namespace Rospand_IMS.Models
         public string Status { get; set; }
         public string SortBy { get; set; }
         public string SortOrder { get; set; }
+        public string SearchString { get; set; }
 
     }
 

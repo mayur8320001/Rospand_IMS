@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
+    [Authorize]
     public class GoodsReceiptController : Controller
     {
         private readonly ApplicationDbContext _context;

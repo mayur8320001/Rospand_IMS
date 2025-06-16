@@ -1,49 +1,66 @@
-﻿@model Rospand_IMS.Models.AddressViewModel
+﻿@model Rospand_IMS.Models.Address
 
-<div class="form-group">
-    <label asp-for="Attention" class="control-label"></label>
-    <input asp-for="Attention" class="form-control" />
-    <span asp-validation-for="Attention" class="text-danger"></span>
-</div>
+<div class="row g-2">
+    <div class="col-md-12">
+        <div class="form-group">
+            <label asp-for="Attention" class="form-label"></label>
+            <input asp-for="Attention" class="form-control form-control-sm" />
+            <span asp-validation-for="Attention" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="CountryId" class="control-label"></label>
-    <select asp-for="CountryId" class="form-control" asp-items="ViewBag.CountryId">
-        <option value="">-- Select Country --</option>
-    </select>
-    <span asp-validation-for="CountryId" class="text-danger"></span>
-</div>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label asp-for="StreetAddress" class="form-label"></label>
+            <textarea asp-for="StreetAddress" class="form-control form-control-sm" rows="2"></textarea>
+            <span asp-validation-for="StreetAddress" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="StateId" class="control-label"></label>
-    <select asp-for="StateId" class="form-control">
-        <option value="">-- Select State --</option>
-    </select>
-    <span asp-validation-for="StateId" class="text-danger"></span>
-</div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label asp-for="CountryId" class="form-label"></label>
+            <select asp-for="CountryId" class="form-select form-select-sm"
+                    asp-items="ViewBag.CountryId">
+                <option value="">-- Select Country --</option>
+            </select>
+            <span asp-validation-for="CountryId" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="CityId" class="control-label"></label>
-    <select asp-for="CityId" class="form-control">
-        <option value="">-- Select City --</option>
-    </select>
-    <span asp-validation-for="CityId" class="text-danger"></span>
-</div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label asp-for="StateId" class="form-label"></label>
+            <select asp-for="StateId" class="form-select form-select-sm">
+                <option value="">-- Select State --</option>
+            </select>
+            <span asp-validation-for="StateId" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="StreetAddress" class="control-label"></label>
-    <textarea asp-for="StreetAddress" class="form-control" rows="3"></textarea>
-  
-</div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label asp-for="CityId" class="form-label"></label>
+            <select asp-for="CityId" class="form-select form-select-sm">
+                <option value="">-- Select City --</option>
+            </select>
+            <span asp-validation-for="CityId" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="ZipCode" class="control-label"></label>
-    <input asp-for="ZipCode" class="form-control" />
-    <span asp-validation-for="ZipCode" class="text-danger"></span>
-</div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label asp-for="ZipCode" class="form-label"></label>
+            <input asp-for="ZipCode" class="form-control form-control-sm" />
+            <span asp-validation-for="ZipCode" class="text-danger small"></span>
+        </div>
+    </div>
 
-<div class="form-group">
-    <label asp-for="ContactNo" class="control-label"></label>
-    <input asp-for="ContactNo" class="form-control" />
-    <span asp-validation-for="ContactNo" class="text-danger"></span>
+    <div class="col-md-12">
+        <div class="form-group">
+            <label asp-for="ContactNo" class="form-label"></label>
+            <input asp-for="ContactNo" class="form-control form-control-sm" />
+            <span asp-validation-for="ContactNo" class="text-danger small"></span>
+        </div>
+    </div>
 </div>

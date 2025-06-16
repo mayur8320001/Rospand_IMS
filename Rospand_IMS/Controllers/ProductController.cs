@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
+    [Authorize]
     public class ProductController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -303,6 +305,35 @@ namespace Rospand_IMS.Controllers
             return RedirectToAction(nameof(Details), new { id = product.Id });
         }
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+
+                // Store success message in TempData
+                TempData["NotificationMessage"] = $"Product '{product.Name}' deleted successfully.";
+                TempData["NotificationType"] = "success"; // for styling
+            }
+            catch (DbUpdateException ex)
+            {
+                // Store error message in TempData
+                TempData["NotificationMessage"] = $"Could not delete product '{product.Name}'. It may be referenced by other records.";
+                TempData["NotificationType"] = "danger"; // for styling
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
 
     }
 

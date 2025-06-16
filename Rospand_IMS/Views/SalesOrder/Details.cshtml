@@ -46,7 +46,39 @@
                     <dt class="col-sm-4">Remaining:</dt>
                     <dd class="col-sm-8">@Model.RemainingToDispatch</dd>
                     <dt class="col-sm-4">Total Amount:</dt>
-                    <dd class="col-sm-8">@Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</dd>
+                    <dd class="col-sm-8">
+                        @if (Model.SalesOrder.Currency != null)
+                        {
+                            @if (Model.SalesOrder.Currency.Code == "USD")
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-US"))
+                            }
+                            else if (Model.SalesOrder.Currency.Code == "EUR")
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo("fr-FR"))
+                            }
+                            else if (Model.SalesOrder.Currency.Code == "GBP")
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-GB"))
+                            }
+                            else if (Model.SalesOrder.Currency.Code == "JPY")
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo("ja-JP"))
+                            }
+                            else if (Model.SalesOrder.Currency.Code == "INR")
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-IN"))
+                            }
+                            else
+                            {
+                                @Model.SalesOrder.TotalAmount.ToString("N2") @Model.SalesOrder.Currency.Code
+                            }
+                        }
+                        else
+                        {
+                            @Model.SalesOrder.TotalAmount.ToString("C")
+                        }
+                    </dd>
                 </dl>
             </div>
         </div>
@@ -86,10 +118,74 @@
                             <td>@item.Product.Name</td>
                             <td>@item.Product.SKU</td>
                             <td>@item.Quantity</td>
-                            <td>@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</td>
+                            <td>
+                                @if (Model.SalesOrder.Currency != null)
+                                {
+                                    @if (Model.SalesOrder.Currency.Code == "USD")
+                                    {
+                                        @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("en-US"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "EUR")
+                                    {
+                                        @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("fr-FR"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "GBP")
+                                    {
+                                        @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("en-GB"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "JPY")
+                                    {
+                                        @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("ja-JP"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "INR")
+                                    {
+                                        @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("en-IN"))
+                                    }
+                                    else
+                                    {
+                                        @item.UnitPrice.ToString("N2") @Model.SalesOrder.Currency.Code
+                                    }
+                                }
+                                else
+                                {
+                                    @item.UnitPrice.ToString("C")
+                                }
+                            </td>
                             <td>@item.DiscountPercent</td>
                             <td>@item.TaxRate</td>
-                            <td>@item.LineTotal.ToString("C", new System.Globalization.CultureInfo(Model.SalesOrder.Currency.Code))</td>
+                            <td>
+                                @if (Model.SalesOrder.Currency != null)
+                                {
+                                    @if (Model.SalesOrder.Currency.Code == "USD")
+                                    {
+                                        @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("en-US"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "EUR")
+                                    {
+                                        @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("fr-FR"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "GBP")
+                                    {
+                                        @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("en-GB"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "JPY")
+                                    {
+                                        @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("ja-JP"))
+                                    }
+                                    else if (Model.SalesOrder.Currency.Code == "INR")
+                                    {
+                                        @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("en-IN"))
+                                    }
+                                    else
+                                    {
+                                        @item.LineTotal.ToString("N2") @Model.SalesOrder.Currency.Code
+                                    }
+                                }
+                                else
+                                {
+                                    @item.LineTotal.ToString("C")
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -160,7 +256,6 @@
                                             <i class="fas fa-truck"></i> Mark Delivered
                                         </a>
                                     }
-                                 
                                 </td>
                             </tr>
                         }
@@ -184,10 +279,12 @@ else
     </div>
 }
 
-
 <div class="mt-3">
     <a asp-action="Index" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Back to List
+    </a>
+    <a asp-action="Print" asp-route-id="@Model.SalesOrder.Id" class="btn btn-primary" target="_blank">
+        <i class="fas fa-print"></i> Print
     </a>
     @if (Model.SalesOrder.Status == SalesOrderStatus.Draft)
     {
@@ -207,20 +304,14 @@ else
             <a asp-action="InvoiceDetails" asp-controller="Invoice" asp-route-id="@invoice.Id" class="btn btn-info">
                 <i class="fas fa-file-invoice"></i> View Invoice
             </a>
-
         }
         else
         {
-           @*  <a asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-success">
+            <a asp-controller="Invoice" asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id" class="btn btn-success">
                 <i class="fas fa-file-invoice-dollar"></i> Create Invoice
-            </a> *@
-            <a asp-controller="Invoice" asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id"> <i class="fas fa-file-invoice-dollar"></i> Create Invoice</a>
-
-          @*   <a asp-controller="SalesOrder" asp-action="CreateInvoice" asp-route-salesOrderId="@Model.SalesOrder.Id">  <i class="fas fa-file-invoice-dollar">Create Invoice</a> *@
-
+            </a>
         }
     }
-
 </div>
 
 @section Styles {

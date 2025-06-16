@@ -2,6 +2,26 @@
 
 namespace Rospand_IMS.Models
 {
+
+    public class VendorQuickCreateModel
+    {
+        [Required]
+        public string VendorType { get; set; } = "Business";
+
+        [Required]
+        public string CompanyName { get; set; }
+
+        [Required]
+        public string VendorDisplayName { get; set; }
+
+        [EmailAddress]
+        public string VendorEmail { get; set; }
+
+        public string Mobile { get; set; }
+
+        public int? CurrencyId { get; set; }
+
+    }
     public class VendorCreateViewModel
     {
         // Basic Information

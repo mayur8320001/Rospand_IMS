@@ -4,296 +4,242 @@
     ViewData["Title"] = "Create Customer";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Create New Customer</h6>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white py-2">
+        <h6 class="m-0">Create New Customer</h6>
     </div>
-    <div class="card-body">
+    <div class="card-body p-3">
         <form asp-action="Create" id="customerForm">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2"></div>
 
-            <div class="row">
+            <div class="row g-2 mb-2">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="CustomerType" class="control-label"></label>
-                        <select asp-for="CustomerType" class="form-control">
-                            <option value="Individual">Individual</option>
-                            <option value="Business">Business</option>
-                        </select>
-                        <span asp-validation-for="CustomerType" class="text-danger"></span>
-                    </div>
+                    <label asp-for="CustomerType" class="form-label small fw-bold"></label>
+                    <select asp-for="CustomerType" class="form-select form-select-sm">
+                        <option value="Individual">Individual</option>
+                        <option value="Business">Business</option>
+                    </select>
+                    <span asp-validation-for="CustomerType" class="text-danger small"></span>
                 </div>
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="CustomerDisplayName" class="control-label"></label>
-                        <input asp-for="CustomerDisplayName" class="form-control" />
-                        <span asp-validation-for="CustomerDisplayName" class="text-danger"></span>
-                    </div>
+                    <label asp-for="CustomerDisplayName" class="form-label small fw-bold"></label>
+                    <input asp-for="CustomerDisplayName" class="form-control form-control-sm" />
+                    <span asp-validation-for="CustomerDisplayName" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div id="individualFields" style="@(Model.CustomerType == "Business" ? "display:none;" : "")">
-                <div class="row">
+            <div id="individualFields" class="@(Model.CustomerType == "Business" ? "d-none" : "")">
+                <div class="row g-2 mb-2">
                     <div class="col-md-2">
-                        <div class="form-group">
-                            <label asp-for="Salutation" class="control-label"></label>
-                            <select asp-for="Salutation" class="form-control">
-                                <option value="">Select</option>
-                                <option value="Mr.">Mr.</option>
-                                <option value="Mrs.">Mrs.</option>
-                                <option value="Ms.">Ms.</option>
-                                <option value="Dr.">Dr.</option>
-                            </select>
-                            <span asp-validation-for="Salutation" class="text-danger"></span>
-                        </div>
+                        <label asp-for="Salutation" class="form-label small fw-bold"></label>
+                        <select asp-for="Salutation" class="form-select form-select-sm">
+                            <option value="">Select</option>
+                            <option value="Mr.">Mr.</option>
+                            <option value="Mrs.">Mrs.</option>
+                            <option value="Ms.">Ms.</option>
+                            <option value="Dr.">Dr.</option>
+                        </select>
+                        <span asp-validation-for="Salutation" class="text-danger small"></span>
                     </div>
                     <div class="col-md-5">
-                        <div class="form-group">
-                            <label asp-for="FirstName" class="control-label"></label>
-                            <input asp-for="FirstName" class="form-control" />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
+                        <label asp-for="FirstName" class="form-label small fw-bold"></label>
+                        <input asp-for="FirstName" class="form-control form-control-sm" />
+                        <span asp-validation-for="FirstName" class="text-danger small"></span>
                     </div>
                     <div class="col-md-5">
-                        <div class="form-group">
-                            <label asp-for="LastName" class="control-label"></label>
-                            <input asp-for="LastName" class="form-control" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
+                        <label asp-for="LastName" class="form-label small fw-bold"></label>
+                        <input asp-for="LastName" class="form-control form-control-sm" />
+                        <span asp-validation-for="LastName" class="text-danger small"></span>
                     </div>
                 </div>
             </div>
 
-            <div id="businessFields" style="@(Model.CustomerType == "Individual" ? "display:none;" : "")">
-                <div class="row">
+            <div id="businessFields" class="@(Model.CustomerType == "Individual" ? "d-none" : "")">
+                <div class="row g-2 mb-2">
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="CompanyName" class="control-label"></label>
-                            <input asp-for="CompanyName" class="form-control" />
-                            <span asp-validation-for="CompanyName" class="text-danger"></span>
-                        </div>
+                        <label asp-for="CompanyName" class="form-label small fw-bold"></label>
+                        <input asp-for="CompanyName" class="form-control form-control-sm" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ContactPersonName" class="control-label"></label>
-                            <input asp-for="ContactPersonName" class="form-control" />
-                            <span asp-validation-for="ContactPersonName" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ContactPersonName" class="form-label small fw-bold"></label>
+                        <input asp-for="ContactPersonName" class="form-control form-control-sm" />
+                        <span asp-validation-for="ContactPersonName" class="text-danger small"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-2 mb-2">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="CustomerEmail" class="control-label"></label>
-                        <input asp-for="CustomerEmail" class="form-control" />
-                        <span asp-validation-for="CustomerEmail" class="text-danger"></span>
-                    </div>
+                    <label asp-for="CustomerEmail" class="form-label small fw-bold"></label>
+                    <input asp-for="CustomerEmail" class="form-control form-control-sm" />
+                    <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
                 </div>
                 <div class="col-md-3">
-                    <div class="form-group">
-                        <label asp-for="WorkPhone" class="control-label"></label>
-                        <input asp-for="WorkPhone" class="form-control" />
-                        <span asp-validation-for="WorkPhone" class="text-danger"></span>
-                    </div>
+                    <label asp-for="WorkPhone" class="form-label small fw-bold"></label>
+                    <input asp-for="WorkPhone" class="form-control form-control-sm" />
+                    <span asp-validation-for="WorkPhone" class="text-danger small"></span>
                 </div>
                 <div class="col-md-3">
-                    <div class="form-group">
-                        <label asp-for="Mobile" class="control-label"></label>
-                        <input asp-for="Mobile" class="form-control" />
-                        <span asp-validation-for="Mobile" class="text-danger"></span>
-                    </div>
+                    <label asp-for="Mobile" class="form-label small fw-bold"></label>
+                    <input asp-for="Mobile" class="form-control form-control-sm" />
+                    <span asp-validation-for="Mobile" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-2 mb-2">
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="CurrencyId" class="control-label"></label>
-                        <select asp-for="CurrencyId" asp-items="Model.Currencies" class="form-control">
-                            <option value="">-- Select Currency --</option>
-                        </select>
-                        <span asp-validation-for="CurrencyId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="CurrencyId" class="form-label small fw-bold"></label>
+                    <select asp-for="CurrencyId" asp-items="Model.Currencies" class="form-select form-select-sm">
+                        <option value="">-- Currency --</option>
+                    </select>
+                    <span asp-validation-for="CurrencyId" class="text-danger small"></span>
                 </div>
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="PaymentTermId" class="control-label"></label>
-                        <select asp-for="PaymentTermId" asp-items="Model.PaymentTerms" class="form-control">
-                            <option value="">-- Select Payment Term --</option>
-                        </select>
-                        <span asp-validation-for="PaymentTermId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="PaymentTermId" class="form-label small fw-bold"></label>
+                    <select asp-for="PaymentTermId" asp-items="Model.PaymentTerms" class="form-select form-select-sm">
+                        <option value="">-- Payment Term --</option>
+                    </select>
+                    <span asp-validation-for="PaymentTermId" class="text-danger small"></span>
                 </div>
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="OpeningBalance" class="control-label"></label>
-                        <input asp-for="OpeningBalance" class="form-control" />
-                        <span asp-validation-for="OpeningBalance" class="text-danger"></span>
-                    </div>
+                    <label asp-for="OpeningBalance" class="form-label small fw-bold"></label>
+                    <input asp-for="OpeningBalance" class="form-control form-control-sm" />
+                    <span asp-validation-for="OpeningBalance" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-2 mb-2">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="TaxTypeId" class="control-label"></label>
-                        <select asp-for="TaxTypeId" asp-items="Model.TaxTypes" class="form-control">
-                            <option value="">-- Select Tax Type --</option>
-                        </select>
-                        <span asp-validation-for="TaxTypeId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="TaxTypeId" class="form-label small fw-bold"></label>
+                    <select asp-for="TaxTypeId" asp-items="Model.TaxTypes" class="form-select form-select-sm">
+                        <option value="">-- Tax Type --</option>
+                    </select>
+                    <span asp-validation-for="TaxTypeId" class="text-danger small"></span>
                 </div>
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="TRNNumber" class="control-label"></label>
-                        <input asp-for="TRNNumber" class="form-control" />
-                        <span asp-validation-for="TRNNumber" class="text-danger"></span>
-                    </div>
+                    <label asp-for="TRNNumber" class="form-label small fw-bold"></label>
+                    <input asp-for="TRNNumber" class="form-control form-control-sm" />
+                    <span asp-validation-for="TRNNumber" class="text-danger small"></span>
                 </div>
             </div>
 
-            <h5 class="mt-4 mb-3">Billing Address</h5>
-            <div class="row">
+            <h6 class="mt-3 mb-2 border-bottom pb-1 small fw-bold">Billing Address</h6>
+            <div class="row g-2 mb-2">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="BillingAttention" class="control-label"></label>
-                        <input asp-for="BillingAttention" class="form-control" />
-                        <span asp-validation-for="BillingAttention" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingAttention" class="form-label small fw-bold"></label>
+                    <input asp-for="BillingAttention" class="form-control form-control-sm" />
+                    <span asp-validation-for="BillingAttention" class="text-danger small"></span>
                 </div>
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="BillingContactNo" class="control-label"></label>
-                        <input asp-for="BillingContactNo" class="form-control" />
-                        <span asp-validation-for="BillingContactNo" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingContactNo" class="form-label small fw-bold"></label>
+                    <input asp-for="BillingContactNo" class="form-control form-control-sm" />
+                    <span asp-validation-for="BillingContactNo" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-2 mb-2">
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="BillingCountryId" class="control-label"></label>
-                        <select asp-for="BillingCountryId" asp-items="Model.Countries" class="form-control country-select">
-                            <option value="">-- Select Country --</option>
-                        </select>
-                        <span asp-validation-for="BillingCountryId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingCountryId" class="form-label small fw-bold"></label>
+                    <select asp-for="BillingCountryId" asp-items="Model.Countries" class="form-select form-select-sm country-select">
+                        <option value="">-- Country --</option>
+                    </select>
+                    <span asp-validation-for="BillingCountryId" class="text-danger small"></span>
                 </div>
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="BillingStateId" class="control-label"></label>
-                        <select asp-for="BillingStateId" class="form-control state-select">
-                            <option value="">-- Select State --</option>
-                        </select>
-                        <span asp-validation-for="BillingStateId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingStateId" class="form-label small fw-bold"></label>
+                    <select asp-for="BillingStateId" class="form-select form-select-sm state-select">
+                        <option value="">-- State --</option>
+                    </select>
+                    <span asp-validation-for="BillingStateId" class="text-danger small"></span>
                 </div>
                 <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="BillingCityId" class="control-label"></label>
-                        <select asp-for="BillingCityId" class="form-control city-select">
-                            <option value="">-- Select City --</option>
-                        </select>
-                        <span asp-validation-for="BillingCityId" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingCityId" class="form-label small fw-bold"></label>
+                    <select asp-for="BillingCityId" class="form-select form-select-sm city-select">
+                        <option value="">-- City --</option>
+                    </select>
+                    <span asp-validation-for="BillingCityId" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row g-2 mb-3">
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="BillingStreetAddress" class="control-label"></label>
-                        <input asp-for="BillingStreetAddress" class="form-control" />
-                        <span asp-validation-for="BillingStreetAddress" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingStreetAddress" class="form-label small fw-bold"></label>
+                    <input asp-for="BillingStreetAddress" class="form-control form-control-sm" />
+                    <span asp-validation-for="BillingStreetAddress" class="text-danger small"></span>
                 </div>
                 <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="BillingZipCode" class="control-label"></label>
-                        <input asp-for="BillingZipCode" class="form-control" />
-                        <span asp-validation-for="BillingZipCode" class="text-danger"></span>
-                    </div>
+                    <label asp-for="BillingZipCode" class="form-label small fw-bold"></label>
+                    <input asp-for="BillingZipCode" class="form-control form-control-sm" />
+                    <span asp-validation-for="BillingZipCode" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="form-group form-check">
-                <input class="form-check-input" asp-for="ShippingSameAsBilling" />
-                <label class="form-check-label" asp-for="ShippingSameAsBilling"></label>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" asp-for="ShippingSameAsBilling">
+                <label class="form-check-label small fw-bold" asp-for="ShippingSameAsBilling"></label>
             </div>
 
-            <div id="shippingAddressSection" style="@(Model.ShippingSameAsBilling ? "display:none;" : "")">
-                <h5 class="mt-4 mb-3">Shipping Address</h5>
-                <div class="row">
+            <div id="shippingAddressSection" class="@(Model.ShippingSameAsBilling ? "d-none" : "")">
+                <h6 class="mt-2 mb-2 border-bottom pb-1 small fw-bold">Shipping Address</h6>
+                <div class="row g-2 mb-2">
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ShippingAttention" class="control-label"></label>
-                            <input asp-for="ShippingAttention" class="form-control" />
-                            <span asp-validation-for="ShippingAttention" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingAttention" class="form-label small fw-bold"></label>
+                        <input asp-for="ShippingAttention" class="form-control form-control-sm" />
+                        <span asp-validation-for="ShippingAttention" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ShippingContactNo" class="control-label"></label>
-                            <input asp-for="ShippingContactNo" class="form-control" />
-                            <span asp-validation-for="ShippingContactNo" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingContactNo" class="form-label small fw-bold"></label>
+                        <input asp-for="ShippingContactNo" class="form-control form-control-sm" />
+                        <span asp-validation-for="ShippingContactNo" class="text-danger small"></span>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row g-2 mb-2">
                     <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="ShippingCountryId" class="control-label"></label>
-                            <select asp-for="ShippingCountryId" class="form-control shipping-country-select">
-                                <option value="">-- Select Country --</option>
-                            </select>
-                            <span asp-validation-for="ShippingCountryId" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingCountryId" class="form-label small fw-bold"></label>
+                        <select asp-for="ShippingCountryId" class="form-select form-select-sm shipping-country-select">
+                            <option value="">-- Country --</option>
+                        </select>
+                        <span asp-validation-for="ShippingCountryId" class="text-danger small"></span>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="ShippingStateId" class="control-label"></label>
-                            <select asp-for="ShippingStateId" class="form-control shipping-state-select">
-                                <option value="">-- Select State --</option>
-                            </select>
-                            <span asp-validation-for="ShippingStateId" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingStateId" class="form-label small fw-bold"></label>
+                        <select asp-for="ShippingStateId" class="form-select form-select-sm shipping-state-select">
+                            <option value="">-- State --</option>
+                        </select>
+                        <span asp-validation-for="ShippingStateId" class="text-danger small"></span>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="ShippingCityId" class="control-label"></label>
-                            <select asp-for="ShippingCityId" class="form-control shipping-city-select">
-                                <option value="">-- Select City --</option>
-                            </select>
-                            <span asp-validation-for="ShippingCityId" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingCityId" class="form-label small fw-bold"></label>
+                        <select asp-for="ShippingCityId" class="form-select form-select-sm shipping-city-select">
+                            <option value="">-- City --</option>
+                        </select>
+                        <span asp-validation-for="ShippingCityId" class="text-danger small"></span>
                     </div>
                 </div>
 
-                <div class="row">
+                <div class="row g-2 mb-3">
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ShippingStreetAddress" class="control-label"></label>
-                            <input asp-for="ShippingStreetAddress" class="form-control" />
-                            <span asp-validation-for="ShippingStreetAddress" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingStreetAddress" class="form-label small fw-bold"></label>
+                        <input asp-for="ShippingStreetAddress" class="form-control form-control-sm" />
+                        <span asp-validation-for="ShippingStreetAddress" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ShippingZipCode" class="control-label"></label>
-                            <input asp-for="ShippingZipCode" class="form-control" />
-                            <span asp-validation-for="ShippingZipCode" class="text-danger"></span>
-                        </div>
+                        <label asp-for="ShippingZipCode" class="form-label small fw-bold"></label>
+                        <input asp-for="ShippingZipCode" class="form-control form-control-sm" />
+                        <span asp-validation-for="ShippingZipCode" class="text-danger small"></span>
                     </div>
                 </div>
             </div>
 
-            <div class="form-group mt-4">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-sm btn-primary me-2">
+                    <i class="fas fa-save me-1"></i> Save
+                </button>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
             </div>
         </form>
     </div>
@@ -303,34 +249,26 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
         $(document).ready(function () {
             // Toggle between individual and business fields
             $('#CustomerType').change(function () {
-                if ($(this).val() === 'Individual') {
-                    $('#individualFields').show();
-                    $('#businessFields').hide();
-                } else {
-                    $('#individualFields').hide();
-                    $('#businessFields').show();
-                }
+                $('#individualFields, #businessFields').toggleClass('d-none', $(this).val() !== 'Individual');
             });
 
             // Toggle shipping address section
             $('#ShippingSameAsBilling').change(function () {
+                $('#shippingAddressSection').toggleClass('d-none', $(this).is(':checked'));
                 if ($(this).is(':checked')) {
-                    $('#shippingAddressSection').hide();
-                } else {
-                    $('#shippingAddressSection').show();
+                    copyBillingToShipping();
                 }
             });
 
             // Cascading dropdown for billing address
             $('.country-select').change(function () {
                 var countryId = $(this).val();
-                $('.state-select').empty().append('<option value="">-- Select State --</option>');
-                $('.city-select').empty().append('<option value="">-- Select City --</option>');
+                $('.state-select').empty().append('<option value="">-- State --</option>');
+                $('.city-select').empty().append('<option value="">-- City --</option>');
 
                 if (countryId) {
                     $.getJSON('/Customer/GetStatesByCountry', { countryId: countryId }, function (data) {
@@ -343,7 +281,7 @@
 
             $('.state-select').change(function () {
                 var stateId = $(this).val();
-                $('.city-select').empty().append('<option value="">-- Select City --</option>');
+                $('.city-select').empty().append('<option value="">-- City --</option>');
 
                 if (stateId) {
                     $.getJSON('/Customer/GetCitiesByState', { stateId: stateId }, function (data) {
@@ -357,8 +295,8 @@
             // Cascading dropdown for shipping address
             $('.shipping-country-select').change(function () {
                 var countryId = $(this).val();
-                $('.shipping-state-select').empty().append('<option value="">-- Select State --</option>');
-                $('.shipping-city-select').empty().append('<option value="">-- Select City --</option>');
+                $('.shipping-state-select').empty().append('<option value="">-- State --</option>');
+                $('.shipping-city-select').empty().append('<option value="">-- City --</option>');
 
                 if (countryId) {
                     $.getJSON('/Customer/GetStatesByCountry', { countryId: countryId }, function (data) {
@@ -371,7 +309,7 @@
 
             $('.shipping-state-select').change(function () {
                 var stateId = $(this).val();
-                $('.shipping-city-select').empty().append('<option value="">-- Select City --</option>');
+                $('.shipping-city-select').empty().append('<option value="">-- City --</option>');
 
                 if (stateId) {
                     $.getJSON('/Customer/GetCitiesByState', { stateId: stateId }, function (data) {
@@ -382,18 +320,19 @@
                 }
             });
 
-            // Copy billing to shipping when checkbox is checked
-            $('#ShippingSameAsBilling').change(function () {
-                if ($(this).is(':checked')) {
-                    $('.shipping-country-select').val($('.country-select').val()).trigger('change');
+            function copyBillingToShipping() {
+                $('.shipping-country-select').val($('.country-select').val()).trigger('change');
+                setTimeout(() => {
                     $('.shipping-state-select').val($('.state-select').val()).trigger('change');
-                    $('.shipping-city-select').val($('.city-select').val());
-                    $('#ShippingAttention').val($('#BillingAttention').val());
-                    $('#ShippingContactNo').val($('#BillingContactNo').val());
-                    $('#ShippingStreetAddress').val($('#BillingStreetAddress').val());
-                    $('#ShippingZipCode').val($('#BillingZipCode').val());
-                }
-            });
+                    setTimeout(() => {
+                        $('.shipping-city-select').val($('.city-select').val());
+                    }, 200);
+                }, 200);
+                $('#ShippingAttention').val($('#BillingAttention').val());
+                $('#ShippingContactNo').val($('#BillingContactNo').val());
+                $('#ShippingStreetAddress').val($('#BillingStreetAddress').val());
+                $('#ShippingZipCode').val($('#BillingZipCode').val());
+            }
         });
     </script>
 }

@@ -1,0 +1,124 @@
+﻿@model Rospand_IMS.Models.Customer
+
+@{
+    ViewData["Title"] = "Delete Customer";
+}
+
+<h1>Delete Customer</h1>
+
+<h3>Are you sure you want to delete this customer?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CustomerDisplayName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CustomerDisplayName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CompanyName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CompanyName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CustomerEmail)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CustomerEmail)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkPhone)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkPhone)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Mobile)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Mobile)
+        </dd>
+    </dl>
+
+    <h4>Billing Address</h4>
+    <dl class="row">
+        @if (Model.BillingAddress != null)
+        {
+            <dt class="col-sm-2">
+                Street Address
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BillingAddress.StreetAddress)
+            </dd>
+            <dt class="col-sm-2">
+                City
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BillingAddress.City.Name)
+            </dd>
+            <dt class="col-sm-2">
+                State
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BillingAddress.State.Name)
+            </dd>
+            <dt class="col-sm-2">
+                Country
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BillingAddress.Country.Name)
+            </dd>
+            <dt class="col-sm-2">
+                Zip Code
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.BillingAddress.ZipCode)
+            </dd>
+        }
+    </dl>
+
+    @if (!Model.ShippingSameAsBilling && Model.ShippingAddress != null)
+    {
+        <h4>Shipping Address</h4>
+        <dl class="row">
+            <dt class="col-sm-2">
+                Street Address
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.ShippingAddress.StreetAddress)
+            </dd>
+            <dt class="col-sm-2">
+                City
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.ShippingAddress.City.Name)
+            </dd>
+            <dt class="col-sm-2">
+                State
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.ShippingAddress.State.Name)
+            </dd>
+            <dt class="col-sm-2">
+                Country
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.ShippingAddress.Country.Name)
+            </dd>
+            <dt class="col-sm-2">
+                Zip Code
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.ShippingAddress.ZipCode)
+            </dd>
+        </dl>
+    }
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </form>
+</div>

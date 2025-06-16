@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Rospand_IMS.Models.PurchaseOrder>
+﻿@using Rospand_IMS.Pagination
+@model PaginatedList<Rospand_IMS.Models.PurchaseOrder>
 
 @{
     ViewData["Title"] = "Purchase Orders";
@@ -7,7 +8,9 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4>@ViewData["Title"]</h4>
-        <a asp-action="Create" class="btn btn-primary">Create New</a>
+        <div>
+            <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Create New</a>
+        </div>
     </div>
     <div class="card-body">
         <div class="mb-3">
@@ -17,49 +20,143 @@
                     <select name="status" asp-items="Html.GetEnumSelectList<PurchaseOrderStatus>()" class="form-control">
                         <option value="">All</option>
                     </select>
+                    <input type="hidden" name="pageNumber" value="1" />
                 </div>
-                <button type="submit" class="btn btn-secondary">Filter</button>
+                <button type="submit" class="btn btn-secondary"><i class="fas fa-filter"></i> Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary ml-2">Reset</a>
             </form>
         </div>
 
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>PO Number</th>
-                    <th>Vendor</th>
-                    <th>Order Date</th>
-                    <th>Expected Delivery</th>
-                    <th>Status</th>
-                    <th>Total Amount</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
+        @if (Model.Count == 0)
+        {
+            <div class="alert alert-info">
+                No purchase orders found.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var order in Model)
                 {
-                    <tr>
-                   
-                        <td>@Html.DisplayFor(modelItem => item.PONumber)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Vendor.CompanyName)</td>
-                        <td>@item.OrderDate.ToString("d")</td>
-                        <td>@item.ExpectedDeliveryDate.ToString("d")</td>
-                        <td>
-                            <span class="badge @GetStatusBadgeClass(item.Status)">
-                                @Html.DisplayFor(modelItem => item.Status)
-                            </span>
-                        </td>
-                        <td>@item.TotalAmount.ToString("C")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                            @if (item.Status == PurchaseOrderStatus.Draft)
-                            {
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                            }
-                        </td>
-                    </tr>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card purchase-order-card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-file-invoice"></i> @order.PONumber</h5>
+                                <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-truck"></i> @order.Vendor.CompanyName</h6>
+                                <p class="card-text"><i class="fas fa-calendar-alt"></i> Order Date: @order.OrderDate.ToString("yyyy-MM-dd")</p>
+                                <p class="card-text"><i class="fas fa-calendar-check"></i> Expected Delivery: @order.ExpectedDeliveryDate.ToString("yyyy-MM-dd")</p>
+                                <p class="card-text">
+                                    <i class="fas fa-tags"></i> Status:
+                                    <span class="badge @GetStatusBadgeClass(order.Status)">
+                                        @switch (order.Status)
+                                        {
+                                            case PurchaseOrderStatus.Draft:
+                                                <i class="fas fa-pencil-alt"></i>
+                                                break;
+                                            case PurchaseOrderStatus.Submitted:
+                                                <i class="fas fa-paper-plane"></i>
+                                                break;
+                                            case PurchaseOrderStatus.Approved:
+                                                <i class="fas fa-check-circle"></i>
+                                                break;
+                                            case PurchaseOrderStatus.Ordered:
+                                                <i class="fas fa-shopping-cart"></i>
+                                                break;
+                                            case PurchaseOrderStatus.PartiallyReceived:
+                                                <i class="fas fa-box-open"></i>
+                                                break;
+                                            case PurchaseOrderStatus.Received:
+                                                <i class="fas fa-check-square"></i>
+                                                break;
+                                            case PurchaseOrderStatus.Cancelled:
+                                                <i class="fas fa-times-circle"></i>
+                                                break;
+                                        }
+                                        @order.Status
+                                    </span>
+                                </p>
+                                <p class="card-text">
+                                    <i class="fas fa-money-bill-wave"></i> Total Amount:
+                                    @if (order.Currency != null)
+                                    {
+                                        @if (order.Currency.Code == "USD")
+                                        {
+                                            <span>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-US"))</span>
+                                        }
+                                        else if (order.Currency.Code == "EUR")
+                                        {
+                                            <span>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo("fr-FR"))</span>
+                                        }
+                                        else if (order.Currency.Code == "GBP")
+                                        {
+                                            <span>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-GB"))</span>
+                                        }
+                                        else if (order.Currency.Code == "JPY")
+                                        {
+                                            <span>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo("ja-JP"))</span>
+                                        }
+                                        else if (order.Currency.Code == "INR")
+                                        {
+                                            <span>@order.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-IN"))</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@order.TotalAmount.ToString("N2") @order.Currency.Code</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span>@order.TotalAmount.ToString("C")</span>
+                                    }
+                                </p>
+                                <div class="d-flex justify-content-between">
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm"><i class="fas fa-info-circle"></i> Details</a>
+                                    @if (order.Status == PurchaseOrderStatus.Draft)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
-            </tbody>
-        </table>
+            </div>
+
+            var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+            var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+
+            <nav aria-label="Purchase order pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @prevDisabled">
+                        <a asp-action="Index"
+                           asp-route-pageNumber="@(Model.PageIndex - 1)"
+                           asp-route-status="@Context.Request.Query["status"]"
+                           class="page-link">
+                            <i class="fas fa-angle-left"></i> Previous
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                            <a asp-action="Index"
+                               asp-route-pageNumber="@i"
+                               asp-route-status="@Context.Request.Query["status"]"
+                               class="page-link">
+                                @i
+                            </a>
+                        </li>
+                    }
+                    <li class="page-item @nextDisabled">
+                        <a asp-action="Index"
+                           asp-route-pageNumber="@(Model.PageIndex + 1)"
+                           asp-route-status="@Context.Request.Query["status"]"
+                           class="page-link">
+                            Next <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     </div>
 </div>
 
