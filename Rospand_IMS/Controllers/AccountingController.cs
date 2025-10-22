@@ -278,7 +278,7 @@ namespace Rospand_IMS.Controllers
         // Create Sales Invoice POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSalesInvoice(int customerId, Dictionary<string, string> items)
+        public async Task<IActionResult> CreateSalesInvoice(int customerId)
         {
             if (customerId <= 0)
             {
@@ -301,18 +301,33 @@ namespace Rospand_IMS.Controllers
                 {
                     var index = key.Substring(6, key.Length - 16); // Extract index from items[0].ProductId
                     
-                    var productId = int.Parse(Request.Form[$"items[{index}].ProductId"]);
-                    var quantity = int.Parse(Request.Form[$"items[{index}].Quantity"]);
-                    var unitPrice = decimal.Parse(Request.Form[$"items[{index}].UnitPrice"]);
-                    var totalPrice = decimal.Parse(Request.Form[$"items[{index}].TotalPrice"]);
+                    // Safely parse form values with defaults
+                    var productIdStr = Request.Form[$"items[{index}].ProductId"].FirstOrDefault();
+                    var quantityStr = Request.Form[$"items[{index}].Quantity"].FirstOrDefault();
+                    var unitPriceStr = Request.Form[$"items[{index}].UnitPrice"].FirstOrDefault();
+                    var totalPriceStr = Request.Form[$"items[{index}].TotalPrice"].FirstOrDefault();
                     
-                    invoiceItems.Add(new SalesInvoiceItemViewModel
+                    // Check if values exist and are not empty
+                    if (!string.IsNullOrEmpty(productIdStr) && 
+                        !string.IsNullOrEmpty(quantityStr) && 
+                        !string.IsNullOrEmpty(unitPriceStr) && 
+                        !string.IsNullOrEmpty(totalPriceStr))
                     {
-                        ProductId = productId,
-                        Quantity = quantity,
-                        UnitPrice = unitPrice,
-                        TotalPrice = totalPrice
-                    });
+                        // Parse with try-catch to handle format exceptions
+                        if (int.TryParse(productIdStr, out int productId) &&
+                            int.TryParse(quantityStr, out int quantity) &&
+                            decimal.TryParse(unitPriceStr, out decimal unitPrice) &&
+                            decimal.TryParse(totalPriceStr, out decimal totalPrice))
+                        {
+                            invoiceItems.Add(new SalesInvoiceItemViewModel
+                            {
+                                ProductId = productId,
+                                Quantity = quantity,
+                                UnitPrice = unitPrice,
+                                TotalPrice = totalPrice
+                            });
+                        }
+                    }
                 }
             }
 

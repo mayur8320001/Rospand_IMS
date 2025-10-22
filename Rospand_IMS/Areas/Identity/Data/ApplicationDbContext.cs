@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Models;
-using Rospand_IMS.Models.Account;  // adjust namespaces
+using Rospand_IMS.Models.Account;
+using Rospand_IMS.Models.Employee; // Add this namespace
 
 namespace Rospand_IMS.Data
 {
@@ -17,6 +18,11 @@ namespace Rospand_IMS.Data
         public DbSet<SalesInvoice> SalesInvoices { get; set; }
         public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
         public DbSet<DailyExpense> DailyExpenses { get; set; }
+
+        // Employee Management
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Position> Positions { get; set; }
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -75,6 +81,16 @@ namespace Rospand_IMS.Data
             modelBuilder.Entity<SalesInvoiceItem>()
                 .HasKey(s => s.InvoiceItemId);
 
+            // Configure employee entities primary keys
+            modelBuilder.Entity<Employee>()
+                .HasKey(e => e.Id);
+
+            modelBuilder.Entity<Department>()
+                .HasKey(d => d.Id);
+
+            modelBuilder.Entity<Position>()
+                .HasKey(p => p.Id);
+
             // Configure relationships
             modelBuilder.Entity<Transaction>()
                 .HasOne(t => t.Ledger)
@@ -87,6 +103,24 @@ namespace Rospand_IMS.Data
                 .WithMany(si => si.Items)
                 .HasForeignKey(sii => sii.InvoiceId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Position>()
+                .HasOne(p => p.Department)
+                .WithMany()
+                .HasForeignKey(p => p.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to prevent cascade cycles
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Department)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to prevent cascade cycles
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Position)
+                .WithMany()
+                .HasForeignKey(e => e.PositionId)
+                .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict to prevent cascade cycles
 
             modelBuilder.Entity<State>()
                 .HasIndex(s => s.StateId)

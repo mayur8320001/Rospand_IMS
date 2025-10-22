@@ -1,0 +1,140 @@
+@model IEnumerable<Rospand_IMS.Models.Employee.Employee>
+
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Employee Management</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add New Employee
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="searchString" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchString" name="searchString" value="@ViewBag.SearchString" placeholder="Name, Employee ID, Email">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="Active" selected="@(ViewBag.SelectedStatus?.ToString() == "Active")">Active</option>
+                        <option value="Inactive" selected="@(ViewBag.SelectedStatus?.ToString() == "Inactive")">Inactive</option>
+                        <option value="OnLeave" selected="@(ViewBag.SelectedStatus?.ToString() == "OnLeave")">On Leave</option>
+                        <option value="Terminated" selected="@(ViewBag.SelectedStatus?.ToString() == "Terminated")">Terminated</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="departmentId" class="form-label">Department</label>
+                    <select class="form-select" id="departmentId" name="departmentId">
+                        <option value="">All Departments</option>
+                        @if (ViewBag.Departments != null)
+                        {
+                            @foreach (var dept in ViewBag.Departments as IEnumerable<Rospand_IMS.Models.Employee.Department>)
+                            {
+                                <option value="@dept.Id" selected="@(ViewBag.SelectedDepartmentId?.ToString() == dept.Id.ToString())">@dept.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div>
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee List -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Hire Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var employee in Model)
+                            {
+                                <tr>
+                                    <td>@employee.EmployeeId</td>
+                                    <td>@employee.FullName</td>
+                                    <td>@employee.Email</td>
+                                    <td>@employee.Department?.Name</td>
+                                    <td>@employee.Position?.Title</td>
+                                    <td>@employee.HireDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @{
+                                            var statusClass = employee.Status switch
+                                            {
+                                                Rospand_IMS.Models.Employee.EmployeeStatus.Active => "badge bg-success",
+                                                Rospand_IMS.Models.Employee.EmployeeStatus.Inactive => "badge bg-secondary",
+                                                Rospand_IMS.Models.Employee.EmployeeStatus.OnLeave => "badge bg-warning",
+                                                Rospand_IMS.Models.Employee.EmployeeStatus.Terminated => "badge bg-danger",
+                                                _ => "badge bg-primary"
+                                            };
+                                        }
+                                        <span class="@statusClass">@employee.Status</span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a asp-action="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                        <a asp-action="Delete" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4>No Employees Found</h4>
+                    <p class="text-muted">Create your first employee to get started.</p>
+                    <a asp-action="Create" class="btn btn-primary">Add New Employee</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rospand_IMS.Data;
 
@@ -11,9 +12,11 @@ using Rospand_IMS.Data;
 namespace Rospand_IMS.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251022121349_DepAdd")]
+    partial class DepAdd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -850,47 +853,6 @@ namespace Rospand_IMS.Migrations
                     b.ToTable("InvoiceItems");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.Menu", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ActionName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ControllerName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IconClass")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Menus");
-                });
-
             modelBuilder.Entity("Rospand_IMS.Models.OutwardEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -968,38 +930,6 @@ namespace Rospand_IMS.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OutwardEntryItems");
-                });
-
-            modelBuilder.Entity("Rospand_IMS.Models.PageAccess", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsAdd")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsEdit")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PageName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("PageAccesses");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.Payment", b =>
@@ -1332,24 +1262,6 @@ namespace Rospand_IMS.Migrations
                     b.ToTable("PurchaseOrderItems");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.RoleMaster", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RoleMasters");
-                });
-
             modelBuilder.Entity("Rospand_IMS.Models.SalesOrder", b =>
                 {
                     b.Property<int>("Id")
@@ -1569,46 +1481,6 @@ namespace Rospand_IMS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Units");
-                });
-
-            modelBuilder.Entity("Rospand_IMS.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastLoginDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.Vendor", b =>
@@ -2026,17 +1898,6 @@ namespace Rospand_IMS.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Rospand_IMS.Models.PageAccess", b =>
-                {
-                    b.HasOne("Rospand_IMS.Models.RoleMaster", "Role")
-                        .WithMany("PageAccesses")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("Rospand_IMS.Models.Payment", b =>
                 {
                     b.HasOne("Rospand_IMS.Models.Invoice", "Invoice")
@@ -2256,11 +2117,6 @@ namespace Rospand_IMS.Migrations
             modelBuilder.Entity("Rospand_IMS.Models.PurchaseOrder", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("Rospand_IMS.Models.RoleMaster", b =>
-                {
-                    b.Navigation("PageAccesses");
                 });
 
             modelBuilder.Entity("Rospand_IMS.Models.SalesOrder", b =>
