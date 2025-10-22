@@ -33,8 +33,8 @@
             <form asp-action="CreateSalesInvoice" method="post" id="invoiceForm">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="CustomerId" class="form-label">Customer</label>
-                        <select asp-for="CustomerId" class="form-select" required>
+                        <label for="customerId" class="form-label">Customer</label>
+                        <select id="customerId" name="customerId" class="form-select" required>
                             <option value="">Select Customer</option>
                             @if (ViewBag.Customers != null)
                             {
@@ -44,11 +44,10 @@
                                 }
                             }
                         </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="InvoiceDate" class="form-label">Invoice Date</label>
-                        <input asp-for="InvoiceDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly>
+                        <input type="date" class="form-control" id="InvoiceDate" name="InvoiceDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly>
                     </div>
                 </div>
 
