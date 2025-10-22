@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
 using Rospand_IMS.Models.Account;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
@@ -40,6 +44,28 @@ namespace Rospand_IMS.Controllers
             };
 
             return View(model);
+        }
+
+        // API endpoint to get products for autocomplete
+        [HttpGet]
+        public async Task<IActionResult> GetProducts()
+        {
+            var products = await _context.Products
+                .Include(p => p.Unit)
+                .Select(p => new
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Sku = p.SKU,
+                    SalesPrice = p.SalesPrice ?? 0,
+                    UnitName = p.Unit != null ? p.Unit.Name : "",
+                    AvailableQuantity = _context.Inventories
+                        .Where(i => i.ProductId == p.Id)
+                        .Sum(i => i.QuantityOnHand - i.QuantityReserved)
+                })
+                .ToListAsync();
+
+            return Json(products);
         }
 
         // Ledgers
@@ -252,10 +278,97 @@ namespace Rospand_IMS.Controllers
         // Create Sales Invoice POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSalesInvoice(SalesInvoice invoice, List<SalesInvoiceItemViewModel> items)
+        public async Task<IActionResult> CreateSalesInvoice(int customerId, Dictionary<string, string> items)
         {
-            if (ModelState.IsValid)
+            if (customerId <= 0)
             {
+                TempData["ErrorMessage"] = "Please select a customer.";
+                ViewBag.Customers = await _context.Customers
+                    .OrderBy(c => c.CustomerDisplayName)
+                    .Select(c => new { c.Id, c.CustomerDisplayName })
+                    .ToListAsync();
+                return View(new SalesInvoice());
+            }
+
+            // Parse items from form data
+            var invoiceItems = new List<SalesInvoiceItemViewModel>();
+            
+            // The items will be sent as form fields like items[0].ProductId, items[0].Quantity, etc.
+            // We need to parse them manually
+            foreach (var key in Request.Form.Keys)
+            {
+                if (key.StartsWith("items[") && key.EndsWith("].ProductId"))
+                {
+                    var index = key.Substring(6, key.Length - 16); // Extract index from items[0].ProductId
+                    
+                    var productId = int.Parse(Request.Form[$"items[{index}].ProductId"]);
+                    var quantity = int.Parse(Request.Form[$"items[{index}].Quantity"]);
+                    var unitPrice = decimal.Parse(Request.Form[$"items[{index}].UnitPrice"]);
+                    var totalPrice = decimal.Parse(Request.Form[$"items[{index}].TotalPrice"]);
+                    
+                    invoiceItems.Add(new SalesInvoiceItemViewModel
+                    {
+                        ProductId = productId,
+                        Quantity = quantity,
+                        UnitPrice = unitPrice,
+                        TotalPrice = totalPrice
+                    });
+                }
+            }
+
+            if (!invoiceItems.Any())
+            {
+                TempData["ErrorMessage"] = "At least one invoice item is required.";
+                ViewBag.Customers = await _context.Customers
+                    .OrderBy(c => c.CustomerDisplayName)
+                    .Select(c => new { c.Id, c.CustomerDisplayName })
+                    .ToListAsync();
+                return View(new SalesInvoice());
+            }
+
+            // Validate items
+            foreach (var item in invoiceItems)
+            {
+                if (item.ProductId <= 0)
+                {
+                    TempData["ErrorMessage"] = "All items must have a valid product selected.";
+                    ViewBag.Customers = await _context.Customers
+                        .OrderBy(c => c.CustomerDisplayName)
+                        .Select(c => new { c.Id, c.CustomerDisplayName })
+                        .ToListAsync();
+                    return View(new SalesInvoice());
+                }
+                
+                if (item.Quantity <= 0)
+                {
+                    TempData["ErrorMessage"] = "All items must have a quantity greater than zero.";
+                    ViewBag.Customers = await _context.Customers
+                        .OrderBy(c => c.CustomerDisplayName)
+                        .Select(c => new { c.Id, c.CustomerDisplayName })
+                        .ToListAsync();
+                    return View(new SalesInvoice());
+                }
+                
+                if (item.UnitPrice <= 0)
+                {
+                    TempData["ErrorMessage"] = "All items must have a unit price greater than zero.";
+                    ViewBag.Customers = await _context.Customers
+                        .OrderBy(c => c.CustomerDisplayName)
+                        .Select(c => new { c.Id, c.CustomerDisplayName })
+                        .ToListAsync();
+                    return View(new SalesInvoice());
+                }
+            }
+
+            try
+            {
+                // Create the invoice
+                var invoice = new SalesInvoice
+                {
+                    CustomerId = customerId,
+                    InvoiceDate = DateTime.Now
+                };
+
                 // Generate invoice number
                 var lastInvoice = await _context.SalesInvoices
                     .OrderByDescending(i => i.InvoiceId)
@@ -272,13 +385,12 @@ namespace Rospand_IMS.Controllers
                 }
                 
                 invoice.InvoiceNumber = $"INV-{(lastNumber + 1).ToString("D6")}";
-                invoice.InvoiceDate = DateTime.Now;
                 
                 // Calculate total amount from items
-                invoice.TotalAmount = items.Sum(i => i.TotalPrice);
+                invoice.TotalAmount = invoiceItems.Sum(i => i.TotalPrice);
                 
                 // Add items to invoice
-                foreach (var item in items)
+                foreach (var item in invoiceItems)
                 {
                     invoice.Items.Add(new SalesInvoiceItem
                     {
@@ -294,15 +406,18 @@ namespace Rospand_IMS.Controllers
                 TempData["SuccessMessage"] = "Sales invoice created successfully.";
                 return RedirectToAction(nameof(SalesInvoices));
             }
-            
-            // If we got this far, something failed, redisplay form
-            ViewBag.Customers = await _context.Customers
-                .OrderBy(c => c.CustomerDisplayName)
-                .Select(c => new { c.Id, c.CustomerDisplayName })
-                .ToListAsync();
-            
-            TempData["ErrorMessage"] = "Error creating sales invoice. Please check the form.";
-            return View(invoice);
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error saving invoice: {ex.Message}");
+                TempData["ErrorMessage"] = "An error occurred while saving the invoice. Please try again.";
+                
+                ViewBag.Customers = await _context.Customers
+                    .OrderBy(c => c.CustomerDisplayName)
+                    .Select(c => new { c.Id, c.CustomerDisplayName })
+                    .ToListAsync();
+                return View(new SalesInvoice());
+            }
         }
 
         [HttpPost]
