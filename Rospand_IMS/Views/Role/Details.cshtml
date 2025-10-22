@@ -1,0 +1,82 @@
+@model RoleViewModel
+
+@{
+    ViewData["Title"] = "Role Details";
+}
+
+<div class="container">
+    <h1>Role Details</h1>
+
+    <div>
+        <h4>Role</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">Role Name</dt>
+            <dd class="col-sm-10">@Model.RoleName</dd>
+        </dl>
+        
+        <h5>Page Accesses</h5>
+        @if (Model.PageAccesses.Any())
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Page Name</th>
+                        <th>Add</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var access in Model.PageAccesses)
+                    {
+                        <tr>
+                            <td>@access.PageName</td>
+                            <td>
+                                @if (access.IsAdd)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (access.IsEdit)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (access.IsDelete)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">No</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No page accesses defined for this role.</p>
+        }
+    </div>
+
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+        <a asp-action="ManagePageAccess" asp-route-id="@Model.Id" class="btn btn-secondary">Manage Access</a>
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Delete</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

@@ -12,6 +12,7 @@
     <PackageReference Include="DinkToPdfAll" Version="1.0.5" />
     <PackageReference Include="EPPlus" Version="7.4.0" />
     <PackageReference Include="itext7" Version="7.1.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.12" />
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.20" />

@@ -49,6 +49,12 @@ namespace Rospand_IMS.Data
         public DbSet<OutwardEntryItem> OutwardEntryItems { get; set; }
         public DbSet<GoodsReceipt> GoodsReceipts { get; set; }
 
+        // User Management DbSets
+        public DbSet<User> Users { get; set; }
+        public DbSet<RoleMaster> RoleMasters { get; set; }
+        public DbSet<PageAccess> PageAccesses { get; set; }
+        public DbSet<Menu> Menus { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -128,6 +134,43 @@ namespace Rospand_IMS.Data
                 .WithMany(a => a.ShippingCustomers)
                 .HasForeignKey(c => c.ShippingAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Configure User Management entities
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Username).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.PasswordHash).IsRequired();
+                entity.Property(e => e.Role).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<RoleMaster>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RoleName).HasMaxLength(50).IsRequired();
+            });
+
+            modelBuilder.Entity<PageAccess>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PageName).HasMaxLength(100).IsRequired();
+                
+                entity.HasOne(d => d.Role)
+                    .WithMany(p => p.PageAccesses)
+                    .HasForeignKey(d => d.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Configure Menu entity
+            modelBuilder.Entity<Menu>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.ControllerName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.ActionName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.IconClass).HasMaxLength(50);
+            });
         }
     }
 }

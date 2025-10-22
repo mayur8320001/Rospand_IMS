@@ -1,0 +1,71 @@
+@model UserViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="container">
+    <h1>Edit User</h1>
+
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedDate" />
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" readonly />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-control">
+                        <option value="">Select Role</option>
+                        @if (ViewBag.Roles != null)
+                        {
+                            @foreach (var role in ViewBag.Roles as List<string>)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group mb-3 form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Created Date</label>
+                    <input class="form-control" value="@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")" readonly />
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Last Login</label>
+                    <input class="form-control" value="@(Model.LastLoginDate?.ToString("dd/MM/yyyy HH:mm") ?? "Never")" readonly />
+                </div>
+                
+                <div class="form-group">
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -12,6 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ISKUGenerator, SKUGenerator>();
 builder.Services.AddSingleton<IConverter>(new SynchronizedConverter(new PdfTools()));
 builder.Services.AddScoped<PdfService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+
+// Session support
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // ✅ Use only ONE connection string (choose one of the following)
 // Option 1: LocalDB with Windows Authentication (recommended for development)
@@ -53,6 +63,7 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession(); // Add session middleware
 
 // Routes
 app.MapControllerRoute(

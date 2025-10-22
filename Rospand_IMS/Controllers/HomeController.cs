@@ -26,6 +26,12 @@ namespace Rospand_IMS.Controllers
 
         public async Task<IActionResult> Index(int? month, int? year)
         {
+            // Check if user is logged in
+            if (HttpContext.Session.GetString("Username") == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            
             // Get selected month/year or use current
             var now = DateTime.Now;
             var selectedMonth = month ?? now.Month;
@@ -97,6 +103,12 @@ namespace Rospand_IMS.Controllers
          int? warehouseId,
          int pageNumber = 1)
         {
+            // Check if user is logged in
+            if (HttpContext.Session.GetString("Username") == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            
             const int pageSize = 10;
 
             // Handle details view request

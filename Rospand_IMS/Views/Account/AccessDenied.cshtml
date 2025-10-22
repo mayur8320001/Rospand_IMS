@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h3 class="text-center">Access Denied</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h4>You do not have permission to access this resource.</h4>
+                    <p>Please contact your administrator if you believe this is an error.</p>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Go to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

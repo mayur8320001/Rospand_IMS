@@ -1,0 +1,63 @@
+@model RoleViewModel
+
+@{
+    ViewData["Title"] = "Manage Page Access";
+}
+
+<div class="container">
+    <h1>Manage Page Access for @Model.RoleName</h1>
+
+    <hr />
+    <div class="row">
+        <div class="col-md-12">
+            <form asp-action="ManagePageAccess">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="RoleName" />
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Page Name</th>
+                                <th>Add</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.PageAccesses.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" asp-for="PageAccesses[i].Id" />
+                                        <input type="hidden" asp-for="PageAccesses[i].RoleId" />
+                                        <input asp-for="PageAccesses[i].PageName" class="form-control" readonly />
+                                    </td>
+                                    <td>
+                                        <input asp-for="PageAccesses[i].IsAdd" class="form-check-input" />
+                                    </td>
+                                    <td>
+                                        <input asp-for="PageAccesses[i].IsEdit" class="form-check-input" />
+                                    </td>
+                                    <td>
+                                        <input asp-for="PageAccesses[i].IsDelete" class="form-check-input" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="form-group">
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
