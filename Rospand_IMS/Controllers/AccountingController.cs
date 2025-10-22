@@ -42,6 +42,28 @@ namespace Rospand_IMS.Controllers
             return View(model);
         }
 
+        // API endpoint to get products for autocomplete
+        [HttpGet]
+        public async Task<IActionResult> GetProducts()
+        {
+            var products = await _context.Products
+                .Include(p => p.Unit)
+                .Select(p => new
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Sku = p.SKU,
+                    SalesPrice = p.SalesPrice ?? 0,
+                    UnitName = p.Unit != null ? p.Unit.Name : "",
+                    AvailableQuantity = _context.Inventories
+                        .Where(i => i.ProductId == p.Id)
+                        .Sum(i => i.QuantityOnHand - i.QuantityReserved)
+                })
+                .ToListAsync();
+
+            return Json(products);
+        }
+
         // Ledgers
         public async Task<IActionResult> Ledgers()
         {

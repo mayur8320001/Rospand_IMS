@@ -58,6 +58,8 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
+                                <th>SKU</th>
+                                <th>Available Qty</th>
                                 <th>Quantity</th>
                                 <th>Unit Price</th>
                                 <th>Total</th>
@@ -67,8 +69,15 @@
                         <tbody id="itemsContainer">
                             <tr class="item-row">
                                 <td>
-                                    <input type="text" class="form-control product-name" placeholder="Product Name">
+                                    <input type="text" class="form-control product-name" placeholder="Type to search product">
                                     <input type="hidden" class="product-id" name="items[0].ProductId">
+                                    <div class="product-suggestions"></div>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control product-sku" readonly>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control available-qty" readonly>
                                 </td>
                                 <td>
                                     <input type="number" class="form-control quantity" name="items[0].Quantity" min="1" value="1">
@@ -125,14 +134,39 @@
     <script>
         $(document).ready(function() {
             let itemIndex = 1;
+            let products = []; // Will store product data
+
+            // Fetch products data
+            function fetchProducts() {
+                $.ajax({
+                    url: '@Url.Action("GetProducts", "Accounting")',
+                    method: 'GET',
+                    success: function(data) {
+                        products = data;
+                    },
+                    error: function() {
+                        console.log('Failed to fetch products');
+                    }
+                });
+            }
+
+            // Initialize by fetching products
+            fetchProducts();
 
             // Add new item row
             $('#addItem').click(function() {
                 const newRow = `
                     <tr class="item-row">
                         <td>
-                            <input type="text" class="form-control product-name" placeholder="Product Name">
+                            <input type="text" class="form-control product-name" placeholder="Type to search product">
                             <input type="hidden" class="product-id" name="items[${itemIndex}].ProductId">
+                            <div class="product-suggestions"></div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control product-sku" readonly>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control available-qty" readonly>
                         </td>
                         <td>
                             <input type="number" class="form-control quantity" name="items[${itemIndex}].Quantity" min="1" value="1">
@@ -164,6 +198,76 @@
                 }
             });
 
+            // Product search with autocomplete
+            $(document).on('input', '.product-name', function() {
+                const input = $(this);
+                const searchTerm = input.val().toLowerCase();
+                const suggestionsContainer = input.siblings('.product-suggestions');
+                const row = input.closest('.item-row');
+                
+                if (searchTerm.length >= 2) {
+                    const filteredProducts = products.filter(p => 
+                        p.name.toLowerCase().includes(searchTerm) || 
+                        p.sku.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    if (filteredProducts.length > 0) {
+                        let suggestionsHtml = '<div class="suggestions-dropdown">';
+                        filteredProducts.slice(0, 5).forEach(product => {
+                            suggestionsHtml += `
+                                <div class="suggestion-item" data-id="${product.id}" data-name="${product.name}" data-sku="${product.sku}" data-price="${product.salesPrice}" data-available="${product.availableQuantity}">
+                                    ${product.name} (SKU: ${product.sku}) - ₹${product.salesPrice}
+                                </div>
+                            `;
+                        });
+                        suggestionsHtml += '</div>';
+                        suggestionsContainer.html(suggestionsHtml).show();
+                    } else {
+                        suggestionsContainer.hide();
+                    }
+                } else {
+                    suggestionsContainer.hide();
+                }
+            });
+
+            // Handle product selection
+            $(document).on('click', '.suggestion-item', function() {
+                const item = $(this);
+                const row = item.closest('.item-row');
+                const productNameInput = row.find('.product-name');
+                const productIdInput = row.find('.product-id');
+                const productSkuInput = row.find('.product-sku');
+                const availableQtyInput = row.find('.available-qty');
+                const unitPriceInput = row.find('.unit-price');
+                const suggestionsContainer = item.parent().parent();
+                
+                // Set values
+                productNameInput.val(item.data('name'));
+                productIdInput.val(item.data('id'));
+                productSkuInput.val(item.data('sku'));
+                availableQtyInput.val(item.data('available'));
+                unitPriceInput.val(item.data('price'));
+                
+                // Calculate total for this row
+                const quantity = parseFloat(row.find('.quantity').val()) || 0;
+                const unitPrice = parseFloat(item.data('price')) || 0;
+                const total = quantity * unitPrice;
+                row.find('.item-total').val(total.toFixed(2));
+                
+                // Hide suggestions
+                suggestionsContainer.hide();
+                
+                // Recalculate total
+                calculateTotal();
+            });
+
+            // Hide suggestions when clicking elsewhere
+            $(document).on('click', function(e) {
+                if (!$(e.target).hasClass('product-name') && !$(e.target).hasClass('suggestion-item')) {
+                    $('.product-suggestions').hide();
+                }
+            });
+
             // Calculate item total when quantity or unit price changes
             $(document).on('input', '.quantity, .unit-price', function() {
                 const row = $(this).closest('.item-row');
@@ -172,6 +276,25 @@
                 const total = quantity * unitPrice;
                 row.find('.item-total').val(total.toFixed(2));
                 calculateTotal();
+            });
+
+            // Quantity validation
+            $(document).on('change', '.quantity', function() {
+                const row = $(this).closest('.item-row');
+                const quantity = parseInt($(this).val()) || 0;
+                const available = parseInt(row.find('.available-qty').val()) || 0;
+                
+                if (quantity > available && available > 0) {
+                    alert(`Quantity cannot exceed available stock (${available})`);
+                    $(this).val(available);
+                    $(this).trigger('input'); // Recalculate
+                }
+                
+                if (quantity <= 0) {
+                    alert('Quantity must be at least 1');
+                    $(this).val(1);
+                    $(this).trigger('input'); // Recalculate
+                }
             });
 
             // Calculate total amount for all items
@@ -183,7 +306,7 @@
                 $('#totalAmount').text('₹' + total.toFixed(2));
             }
 
-            // Form submission
+            // Form submission validation
             $('#invoiceForm').submit(function(e) {
                 // Validate that at least one item exists
                 if ($('.item-row').length === 0) {
@@ -192,24 +315,84 @@
                     return false;
                 }
 
-                // Validate item rows
+                // Validate all items
                 let valid = true;
+                let errorMessage = '';
+                
                 $('.item-row').each(function() {
-                    const quantity = parseFloat($(this).find('.quantity').val()) || 0;
-                    const unitPrice = parseFloat($(this).find('.unit-price').val()) || 0;
+                    const row = $(this);
+                    const productId = row.find('.product-id').val();
+                    const quantity = parseInt(row.find('.quantity').val()) || 0;
+                    const unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
+                    const available = parseInt(row.find('.available-qty').val()) || 0;
                     
-                    if (quantity <= 0 || unitPrice <= 0) {
+                    if (!productId) {
                         valid = false;
+                        errorMessage = 'Please select a product for all items.';
+                        return false;
+                    }
+                    
+                    if (quantity <= 0) {
+                        valid = false;
+                        errorMessage = 'Quantity must be at least 1 for all items.';
+                        return false;
+                    }
+                    
+                    if (unitPrice <= 0) {
+                        valid = false;
+                        errorMessage = 'Unit price must be greater than zero for all items.';
+                        return false;
+                    }
+                    
+                    if (quantity > available && available > 0) {
+                        valid = false;
+                        errorMessage = `Quantity cannot exceed available stock (${available}).`;
                         return false;
                     }
                 });
 
                 if (!valid) {
                     e.preventDefault();
-                    alert('All items must have quantity and unit price greater than zero.');
+                    alert(errorMessage);
                     return false;
                 }
             });
         });
     </script>
+    
+    <style>
+        .product-name {
+            position: relative;
+        }
+        
+        .product-suggestions {
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            display: none;
+        }
+        
+        .suggestions-dropdown {
+            padding: 5px 0;
+        }
+        
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+    </style>
 }
