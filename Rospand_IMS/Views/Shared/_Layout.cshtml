@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -162,6 +162,19 @@
                         <li><a class="dropdown-item" asp-controller="Accounting" asp-action="SalesInvoices"><i class="fas fa-file-invoice me-2"></i>Sales Invoices</a></li>
                         <li><a class="dropdown-item" asp-controller="Accounting" asp-action="DailyExpenses"><i class="fas fa-money-bill-wave me-2"></i>Daily Expenses</a></li>
                         <li><a class="dropdown-item" asp-controller="Accounting" asp-action="Reports"><i class="fas fa-chart-bar me-2"></i>Financial Reports</a></li>
+                    </ul>
+                </li>
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-link-text">Employee Management</span>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="employeeDropdown">
+                        <li><a class="dropdown-item" asp-controller="Employee" asp-action="Index"><i class="fas fa-list me-2"></i>Employee List</a></li>
+                        <li><a class="dropdown-item" asp-controller="Employee" asp-action="Create"><i class="fas fa-user-plus me-2"></i>Add Employee</a></li>
+                        <li><a class="dropdown-item" asp-controller="Employee" asp-action="Departments"><i class="fas fa-building me-2"></i>Departments</a></li>
+                        <li><a class="dropdown-item" asp-controller="Employee" asp-action="Positions"><i class="fas fa-briefcase me-2"></i>Positions</a></li>
                     </ul>
                 </li>
             </ul>
