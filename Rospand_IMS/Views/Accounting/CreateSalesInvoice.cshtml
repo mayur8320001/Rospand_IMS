@@ -1,0 +1,215 @@
+@model Rospand_IMS.Models.Account.SalesInvoice
+
+@{
+    ViewData["Title"] = "Create Sales Invoice";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Create Sales Invoice</h1>
+        <a asp-action="SalesInvoices" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Sales Invoices
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="CreateSalesInvoice" method="post" id="invoiceForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="CustomerId" class="form-label">Customer</label>
+                        <select asp-for="CustomerId" class="form-select" required>
+                            <option value="">Select Customer</option>
+                            @if (ViewBag.Customers != null)
+                            {
+                                @foreach (var customer in ViewBag.Customers as IEnumerable<dynamic>)
+                                {
+                                    <option value="@customer.Id">@customer.CustomerDisplayName</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="InvoiceDate" class="form-label">Invoice Date</label>
+                        <input asp-for="InvoiceDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Invoice Items</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsContainer">
+                            <tr class="item-row">
+                                <td>
+                                    <input type="text" class="form-control product-name" placeholder="Product Name">
+                                    <input type="hidden" class="product-id" name="items[0].ProductId">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control quantity" name="items[0].Quantity" min="1" value="1">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control unit-price" name="items[0].UnitPrice" step="0.01" min="0" value="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control item-total" name="items[0].TotalPrice" step="0.01" min="0" readonly>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="addItem">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tr>
+                                    <td><strong>Total Amount:</strong></td>
+                                    <td id="totalAmount">₹0.00</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Invoice
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let itemIndex = 1;
+
+            // Add new item row
+            $('#addItem').click(function() {
+                const newRow = `
+                    <tr class="item-row">
+                        <td>
+                            <input type="text" class="form-control product-name" placeholder="Product Name">
+                            <input type="hidden" class="product-id" name="items[${itemIndex}].ProductId">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control quantity" name="items[${itemIndex}].Quantity" min="1" value="1">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control unit-price" name="items[${itemIndex}].UnitPrice" step="0.01" min="0" value="0">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control item-total" name="items[${itemIndex}].TotalPrice" step="0.01" min="0" readonly>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remove-item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                $('#itemsContainer').append(newRow);
+                itemIndex++;
+            });
+
+            // Remove item row
+            $(document).on('click', '.remove-item', function() {
+                if ($('.item-row').length > 1) {
+                    $(this).closest('.item-row').remove();
+                    calculateTotal();
+                } else {
+                    alert('At least one item is required.');
+                }
+            });
+
+            // Calculate item total when quantity or unit price changes
+            $(document).on('input', '.quantity, .unit-price', function() {
+                const row = $(this).closest('.item-row');
+                const quantity = parseFloat(row.find('.quantity').val()) || 0;
+                const unitPrice = parseFloat(row.find('.unit-price').val()) || 0;
+                const total = quantity * unitPrice;
+                row.find('.item-total').val(total.toFixed(2));
+                calculateTotal();
+            });
+
+            // Calculate total amount for all items
+            function calculateTotal() {
+                let total = 0;
+                $('.item-total').each(function() {
+                    total += parseFloat($(this).val()) || 0;
+                });
+                $('#totalAmount').text('₹' + total.toFixed(2));
+            }
+
+            // Form submission
+            $('#invoiceForm').submit(function(e) {
+                // Validate that at least one item exists
+                if ($('.item-row').length === 0) {
+                    e.preventDefault();
+                    alert('At least one item is required.');
+                    return false;
+                }
+
+                // Validate item rows
+                let valid = true;
+                $('.item-row').each(function() {
+                    const quantity = parseFloat($(this).find('.quantity').val()) || 0;
+                    const unitPrice = parseFloat($(this).find('.unit-price').val()) || 0;
+                    
+                    if (quantity <= 0 || unitPrice <= 0) {
+                        valid = false;
+                        return false;
+                    }
+                });
+
+                if (!valid) {
+                    e.preventDefault();
+                    alert('All items must have quantity and unit price greater than zero.');
+                    return false;
+                }
+            });
+        });
+    </script>
+}

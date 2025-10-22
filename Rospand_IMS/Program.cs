@@ -1,83 +1,63 @@
-using DinkToPdf;
+﻿using DinkToPdf;
 using DinkToPdf.Contracts;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
+using OfficeOpenXml;
 using QuestPDF.Infrastructure;
-using Rospand_IMS.Areas.Identity.Data;
 using Rospand_IMS.Data;
-using Rospand_IMS.Models;
-
 using Rospand_IMS.Services;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-
+// Custom services
 builder.Services.AddScoped<ISKUGenerator, SKUGenerator>();
-// In ConfigureServices method
-builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+builder.Services.AddSingleton<IConverter>(new SynchronizedConverter(new PdfTools()));
 builder.Services.AddScoped<PdfService>();
 
-builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+// ✅ Use only ONE connection string (choose one of the following)
+// Option 1: LocalDB with Windows Authentication (recommended for development)
+var connectionString = builder.Configuration.GetConnectionString("con") 
+    ?? builder.Configuration.GetConnectionString("SqlConnection")
+    ?? throw new InvalidOperationException("Connection string not found.");
 
-var connectionString = builder.Configuration.GetConnectionString("con") ?? throw new InvalidOperationException("Connection string 'AuthDbContextConnection' not found.");
-
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-
-/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("con")));*/
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    }));
 
 builder.Services.AddControllersWithViews();
-
-QuestPDF.Settings.License = LicenseType.Community; // or LicenseType.Commercial
-
 builder.Services.AddRazorPages();
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.Password.RequireUppercase = false;
-});
+// Excel and PDF licensing
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+QuestPDF.Settings.License = LicenseType.Community;
 
-
-  
+// Build app
 var app = builder.Build();
 
-
-//await SeedService.SeedDatabase(app.Services);
-
-// Configure the HTTP request pipeline
+// Error handling
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+else
+{
+    app.UseDeveloperExceptionPage();
+}
 
-
-app.UseDeveloperExceptionPage();
-
-// Serve static files and handle routing
+// Middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Proper MVC default routing
+// Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.MapRazorPages();
+
 app.Run();

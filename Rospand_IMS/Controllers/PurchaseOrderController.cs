@@ -1,6 +1,6 @@
-﻿using DinkToPdf;
+using DinkToPdf;
 using DinkToPdf.Contracts;
-using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class PurchaseOrderController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -80,7 +80,7 @@ namespace Rospand_IMS.Controllers
                     CurrencyId = viewModel.CurrencyId,
                     Notes = viewModel.Notes,
                     CreatedDate = DateTime.Now,
-                    //CreatedBy = User.Identity.Name
+                    //CreatedBy = "System"
                 };
 
                 foreach (var item in viewModel.Items)
@@ -298,7 +298,7 @@ namespace Rospand_IMS.Controllers
             {
                 order.Status = PurchaseOrderStatus.Received;
                 order.ReceivedDate = DateTime.Now;
-                order.ReceivedBy = User.Identity.Name;
+                order.ReceivedBy = "System"; // Removed User.Identity.Name
             }
             else
             {
@@ -346,7 +346,7 @@ namespace Rospand_IMS.Controllers
                 purchaseOrder.CurrencyId = viewModel.CurrencyId;
                 purchaseOrder.Notes = viewModel.Notes;
                 purchaseOrder.ModifiedDate = DateTime.Now;
-                purchaseOrder.ModifiedBy = User.Identity.Name;
+                purchaseOrder.ModifiedBy = "System"; // Removed User.Identity.Name
 
                 // Update items
                 foreach (var item in purchaseOrder.Items.ToList())
@@ -603,7 +603,7 @@ namespace Rospand_IMS.Controllers
 
             order.Status = PurchaseOrderStatus.Submitted;
             order.SubmittedDate = DateTime.Now;
-            order.SubmittedBy = User.Identity.Name;
+            order.SubmittedBy = "System"; // Removed User.Identity.Name
             _context.Update(order);
             await _context.SaveChangesAsync();
 
@@ -630,7 +630,7 @@ namespace Rospand_IMS.Controllers
 
             order.Status = PurchaseOrderStatus.Approved;
             order.ApprovedDate = DateTime.Now;
-            order.ApprovedBy = User.Identity.Name;
+            order.ApprovedBy = "System"; // Removed User.Identity.Name
             _context.Update(order);
             await _context.SaveChangesAsync();
 
@@ -660,7 +660,7 @@ namespace Rospand_IMS.Controllers
 
             order.Status = PurchaseOrderStatus.Ordered;
             order.OrderedDate = DateTime.Now;
-            order.OrderedBy = User.Identity.Name;
+            order.OrderedBy = "System"; // Removed User.Identity.Name
             _context.Update(order);
 
             await _context.SaveChangesAsync(); // Removed the inventory update code
@@ -688,7 +688,7 @@ namespace Rospand_IMS.Controllers
 
             order.Status = PurchaseOrderStatus.Cancelled;
             order.CancelledDate = DateTime.Now;
-            //order.CancelledBy = User.Identity.Name;
+            //order.CancelledBy = "System"; // Removed User.Identity.Name
             order.CancellationReason = "Cancelled by user";
             _context.Update(order);
             await _context.SaveChangesAsync();
@@ -882,7 +882,7 @@ namespace Rospand_IMS.Controllers
             {
                 order.Status = PurchaseOrderStatus.Received;
                 order.ReceivedDate = DateTime.Now;
-                order.ReceivedBy = User.Identity.Name;
+                order.ReceivedBy = "System"; // Removed User.Identity.Name
             }
             else
             {

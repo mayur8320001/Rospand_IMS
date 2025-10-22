@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class VendorController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -431,13 +431,15 @@ namespace Rospand_IMS.Controllers
             return Json(states);
         }
 
-        public async Task<JsonResult> GetCitiesByState(int stateId)
+        public async Task<JsonResult> GetCitiesByState(string stateId)
         {
             var cities = await _context.Cities
                 .Where(c => c.StateId == stateId)
                 .Select(c => new { c.Id, c.Name })
                 .ToListAsync();
+
             return Json(cities);
         }
+
     }
 }

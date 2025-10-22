@@ -1,93 +1,133 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Rospand_IMS.Areas.Identity.Data;
 using Rospand_IMS.Models;
+using Rospand_IMS.Models.Account;  // adjust namespaces
 
-namespace Rospand_IMS.Data;
-
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+namespace Rospand_IMS.Data
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
+    public class ApplicationDbContext : DbContext
     {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        // Your DbSets...
+        public DbSet<Ledger> Ledgers { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<SalesInvoice> SalesInvoices { get; set; }
+        public DbSet<SalesInvoiceItem> SalesInvoiceItems { get; set; }
+        public DbSet<DailyExpense> DailyExpenses { get; set; }
+
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Vendor> Vendors { get; set; }
+
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+
+        public DbSet<PaymentTerm> PaymentTerms { get; set; }
+        public DbSet<Tax> Taxes { get; set; }
+        public DbSet<Unit> Units { get; set; }
+        public DbSet<CostCategory> CostCategories { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<State> States { get; set; }
+        public DbSet<City> Cities { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
+        public DbSet<TaxType> TaxTypes { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+
+        public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<SalesOrder> SalesOrders { get; set; }
+        public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
+        public DbSet<OutwardEntry> OutwardEntries { get; set; }
+        public DbSet<OutwardEntryItem> OutwardEntryItems { get; set; }
+        public DbSet<GoodsReceipt> GoodsReceipts { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure account entities primary keys
+            modelBuilder.Entity<DailyExpense>()
+                .HasKey(d => d.ExpenseId);
+
+            modelBuilder.Entity<Ledger>()
+                .HasKey(l => l.LedgerId);
+
+            modelBuilder.Entity<Transaction>()
+                .HasKey(t => t.TransactionId);
+
+            modelBuilder.Entity<SalesInvoice>()
+                .HasKey(s => s.InvoiceId);
+
+            modelBuilder.Entity<SalesInvoiceItem>()
+                .HasKey(s => s.InvoiceItemId);
+
+            // Configure relationships
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Ledger)
+                .WithMany(l => l.LedgerTransactions)
+                .HasForeignKey(t => t.LedgerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SalesInvoiceItem>()
+                .HasOne(sii => sii.Invoice)
+                .WithMany(si => si.Items)
+                .HasForeignKey(sii => sii.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<State>()
+                .HasIndex(s => s.StateId)
+                .IsUnique();
+
+            modelBuilder.Entity<City>()
+                .HasOne(c => c.State)
+                .WithMany(s => s.Cities)
+                .HasForeignKey(c => c.StateId)
+                .HasPrincipalKey(s => s.StateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductComponent>()
+                .HasOne(pc => pc.ParentProduct)
+                .WithMany(p => p.Components)
+                .HasForeignKey(pc => pc.ParentProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductComponent>()
+                .HasOne(pc => pc.ComponentProduct)
+                .WithMany()
+                .HasForeignKey(pc => pc.ComponentProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Vendor>()
+                .HasOne(v => v.BillingAddress)
+                .WithMany(a => a.BillingVendors)
+                .HasForeignKey(v => v.BillingAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Vendor>()
+                .HasOne(v => v.ShippingAddress)
+                .WithMany(a => a.ShippingVendors)
+                .HasForeignKey(v => v.ShippingAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Customer>()
+                .HasOne(c => c.BillingAddress)
+                .WithMany(a => a.BillingCustomers)
+                .HasForeignKey(c => c.BillingAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Customer>()
+                .HasOne(c => c.ShippingAddress)
+                .WithMany(a => a.ShippingCustomers)
+                .HasForeignKey(c => c.ShippingAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
-
-
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<Product> Products { get; set; }
-    public DbSet<Customer> Customers { get; set; }
-    public DbSet<Vendor> Vendors { get; set; }
-
-
-    public DbSet<Invoice> Invoices { get; set; }
-    public DbSet<InvoiceItem> InvoiceItems { get; set; }
-
-    public DbSet<Payment> Payments { get; set; }
-
-
-
-    public DbSet<PaymentTerm> PaymentTerms { get; set; }
-    public DbSet<Tax> Taxes { get; set; }
-
-    public DbSet<Unit> Units { get; set; }
-    public DbSet<CostCategory> CostCategories { get; set; }
-    public DbSet<Country> Countries { get; set; }
-    public DbSet<State> States { get; set; }
-    public DbSet<City> Cities { get; set; }
-    public DbSet<Currency> Currencies { get; set; }
-    public DbSet<TaxType> TaxTypes { get; set; }
-    public DbSet<Address> Addresses { get; set; }
-
-    public DbSet<Inventory> Inventories { get; set; }
-    public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
-    public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-    public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
-    public DbSet<Warehouse> Warehouses { get; set; }
-
-
-    /*   public DbSet<DeliveryChallan> DeliveryChallans { get; set; }
-     *   
-     *   public DbSet<DeliveryChallanItem> DeliveryChallanItems { get; set; }*/
-
-    public DbSet<SalesOrder> SalesOrders { get; set; }
-
-    public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
-
-
-    public DbSet<OutwardEntry> OutwardEntries { get; set; }
-    public DbSet<OutwardEntryItem> OutwardEntryItems { get; set; }
-
-    public DbSet<GoodsReceipt> GoodsReceipts { get; set; }
-
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<ProductComponent>()
-            .HasOne(pc => pc.ParentProduct)
-            .WithMany(p => p.Components)
-            .HasForeignKey(pc => pc.ParentProductId)
-            .OnDelete(DeleteBehavior.Restrict); // or .Cascade / .NoAction depending on your preference
-
-        modelBuilder.Entity<ProductComponent>()
-            .HasOne(pc => pc.ComponentProduct)
-            .WithMany()
-            .HasForeignKey(pc => pc.ComponentProductId)
-            .OnDelete(DeleteBehavior.Restrict); // prevent cycles or multiple cascade paths
-        modelBuilder.Entity<Vendor>()
-  .HasOne(v => v.BillingAddress)
-  .WithMany(a => a.BillingVendors)
-  .HasForeignKey(v => v.BillingAddressId)
-  .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Vendor>()
-            .HasOne(v => v.ShippingAddress)
-            .WithMany(a => a.ShippingVendors)
-            .HasForeignKey(v => v.ShippingAddressId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-    }
-
 }

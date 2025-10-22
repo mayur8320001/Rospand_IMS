@@ -1,4 +1,3 @@
-﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
@@ -6,7 +5,7 @@ using Rospand_IMS.Models;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class CostCategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,7 +15,6 @@ namespace Rospand_IMS.Controllers
             _context = context;
         }
 
-        [Authorize(Policy = "Category:Read")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.CostCategories.ToListAsync());
@@ -35,7 +33,6 @@ namespace Rospand_IMS.Controllers
             return View();
         }
 
-        [Authorize(Policy = "Category:Create")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Description,IsDirectCost,IsActive")] CostCategory costCategory)

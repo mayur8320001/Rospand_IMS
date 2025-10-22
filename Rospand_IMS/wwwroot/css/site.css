@@ -2,19 +2,24 @@
     --sidebar-width: 250px;
     --sidebar-collapsed-width: 70px;
     --header-height: 70px;
-    --primary-color: #4e73df;
+    --primary-color: #4361ee; /* Updated primary color */
     --secondary-color: #f8f9fc;
-    --accent-color: #2e59d9;
+    --accent-color: #3a0ca3; /* Darker accent */
+    --text-color: #2b2d42; /* Dark text for contrast */
+    --light-text: #f8f9fa; /* Light text */
+    --hover-color: #3f37c9; /* Hover state */
+    --bg-color: #f8f9fa; /* Light background */
+    --card-bg: #ffffff; /* White cards */
 }
 
 /* Base Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fa;
+    background-color: var(--bg-color);
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    color: #333;
+    color: var(--text-color);
 }
 
 /* Header Styles */
@@ -25,7 +30,7 @@ body {
     right: 0;
     height: var(--header-height);
     z-index: 1030;
-    background: white;
+    background: var(--card-bg);
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
     display: flex;
     justify-content: space-between;
@@ -47,7 +52,7 @@ body {
 }
 
 .logo-img {
-    max-height: 40px;
+    max-height: 70px;
     object-fit: contain;
 }
 
@@ -66,44 +71,13 @@ body {
     align-items: center;
     justify-content: center;
     margin-left: 0.75rem;
+    transition: all 0.3s ease;
 }
 
     .sidebar-toggle:hover {
-        background-color: var(--secondary-color);
+        background-color: rgba(67, 97, 238, 0.1);
+        transform: rotate(90deg);
     }
-
-/* User Navigation */
-.user-nav {
-    display: flex;
-    align-items: center;
-}
-
-.user-dropdown {
-    display: flex;
-    align-items: center;
-    color: var(--primary-color);
-    background: transparent;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-}
-
-    .user-dropdown:hover {
-        color: var(--accent-color);
-    }
-
-    .user-dropdown i {
-        font-size: 1.25rem;
-        margin-right: 0.5rem;
-    }
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-    object-fit: cover;
-}
 
 /* Sidebar Styles */
 .sidebar {
@@ -112,9 +86,9 @@ body {
     left: 0;
     bottom: 0;
     width: var(--sidebar-width);
-    background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
-    color: white;
-    transition: all 0.3s;
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: var(--light-text);
+    transition: all 0.3s ease;
     z-index: 999;
     overflow-y: auto;
 }
@@ -130,10 +104,29 @@ body {
 
         .sidebar.collapsed .nav-link {
             justify-content: center;
+            padding: 0.75rem 0;
+        }
+
+        /* Improved dropdown behavior when collapsed */
+        .sidebar.collapsed .nav-item {
+            position: relative;
         }
 
         .sidebar.collapsed .dropdown-menu {
-            display: none !important;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            margin-left: 0.5rem;
+            display: none !important; /* Start hidden */
+            min-width: 200px;
+            background: var(--card-bg);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            border-radius: 0.35rem;
+        }
+
+        .sidebar.collapsed .nav-item:hover .dropdown-menu {
+            display: block !important;
+            animation: fadeIn 0.3s ease;
         }
 
 /* Navigation Styles */
@@ -146,70 +139,77 @@ body {
 }
 
 .nav-link {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     padding: 0.75rem 1rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     text-decoration: none;
+    border-left: 3px solid transparent;
 }
 
     .nav-link:hover,
-    .nav-link:focus {
+    .nav-link:focus,
+    .nav-link.active {
         color: white !important;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.15);
+        border-left-color: white;
     }
 
     .nav-link i {
-        font-size: 0.85rem;
-        margin-right: 0.5rem;
+        font-size: 1rem;
+        margin-right: 0.75rem;
         width: 20px;
         text-align: center;
+        transition: all 0.3s ease;
     }
 
 /* Dropdown Styles */
 .dropdown-menu {
-    background-color: var(--accent-color);
+    background: var(--card-bg);
     border: none;
     border-radius: 0.35rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
     padding: 0.5rem 0;
     margin: 0;
+    border-left: 3px solid var(--primary-color);
 }
 
 .dropdown-item {
-    color: rgba(255, 255, 255, 0.8);
-    padding: 0.5rem 1.5rem;
+    color: var(--text-color);
+    padding: 0.65rem 1.5rem;
     text-decoration: none;
     display: flex;
     align-items: center;
+    transition: all 0.2s;
 }
 
     .dropdown-item:hover,
     .dropdown-item:focus {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
     }
 
     .dropdown-item i {
         width: 20px;
         text-align: center;
         margin-right: 0.75rem;
+        color: var(--primary-color);
     }
 
 .dropdown-divider {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 0, 0, 0.05);
 }
 
 /* Main Content */
 .main-content {
     margin-left: var(--sidebar-width);
     margin-top: var(--header-height);
-    padding: 20px;
+    padding: 1.5rem;
     min-height: calc(100vh - var(--header-height));
-    transition: all 0.3s;
-    background-color: #f5f7fa;
+    transition: all 0.3s ease;
+    background-color: var(--bg-color);
 }
 
     .main-content.expanded {
@@ -220,53 +220,62 @@ body {
 .card {
     border: none;
     border-radius: 0.5rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-    margin-bottom: 20px;
-    transition: all 0.3s;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    background: var(--card-bg);
 }
 
     .card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.15);
     }
 
 .card-header {
-    background-color: var(--secondary-color);
-    border-bottom: 1px solid #e3e6f0;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     font-weight: 600;
-    padding: 1rem 1.35rem;
+    padding: 1rem 1.5rem;
+    color: var(--text-color);
 }
 
 .card-body {
-    padding: 1.25rem;
+    padding: 1.5rem;
 }
 
 /* Table Styles */
 .table {
     width: 100%;
     margin-bottom: 1rem;
-    color: #212529;
+    color: var(--text-color);
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
     .table th {
         font-weight: 600;
-        background-color: var(--secondary-color);
+        background-color: rgba(67, 97, 238, 0.05);
+        color: var(--text-color);
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
 .table-striped tbody tr:nth-of-type(odd) {
     background-color: rgba(0, 0, 0, 0.02);
 }
 
-.table-po-items th {
-    white-space: nowrap;
-}
-
 /* Badge Styles */
 .badge {
     padding: 0.35em 0.65em;
     font-size: 0.75em;
-    font-weight: 700;
+    font-weight: 600;
     border-radius: 0.25rem;
+    letter-spacing: 0.5px;
 }
 
 .badge-draft {
@@ -275,54 +284,50 @@ body {
 }
 
 .badge-ordered {
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
 }
 
 .badge-received {
-    background-color: #28a745;
+    background-color: #2a9d8f;
     color: white;
 }
 
 .badge-cancelled {
-    background-color: #dc3545;
+    background-color: #e63946;
     color: white;
 }
 
 /* Form Styles */
 .form-control {
     border-radius: 0.35rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.2);
+    }
 
 .btn {
     border-radius: 0.35rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.5rem 1rem;
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-/* Purchase Order Styles */
-.po-card {
-    border: 1px solid #e3e6f0;
-    border-radius: 0.35rem;
-    margin-bottom: 1.5rem;
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
-.po-header,
-.po-footer {
-    padding: 1rem 1.35rem;
-    border-bottom: 1px solid #e3e6f0;
-    background-color: var(--secondary-color);
-}
-
-.po-body {
-    padding: 1.35rem;
-}
-
-.po-footer {
-    border-top: 1px solid #e3e6f0;
-    border-bottom: none;
-}
+    .btn-primary:hover {
+        background-color: var(--hover-color);
+        border-color: var(--hover-color);
+        transform: translateY(-1px);
+    }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
@@ -380,13 +385,16 @@ body {
     border-radius: 0.25rem !important;
 }
 
-/*tab navigation*/
+/* Login/Logout Card */
 .login-logout-card .card-header {
     padding: 0px 0px 12px 0px;
+    background: transparent;
+    border: none;
 }
 
 .login-logout-card ul.nav-tabs {
     margin: 0px 0px -12px 0px;
+    border-bottom: none;
 }
 
 .login-logout-card li.nav-item {
@@ -398,12 +406,24 @@ body {
     color: #495057;
     text-align: center;
     padding: 1rem;
+    border: none;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
+    .login-logout-card a.nav-link.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
 .login-logout-card .card-body {
-    padding: 10px 20px;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 0 0 0.35rem 0.35rem;
 }
-/* Updated User Navigation Styles */
+
+/* User Navigation */
 .user-nav {
     display: flex;
     align-items: center;
@@ -412,19 +432,18 @@ body {
 .user-dropdown {
     display: flex;
     align-items: center;
-    color: #2e3a4e; /* Darker text for better contrast */
+    color: var(--text-color);
     background: transparent;
     border: none;
     padding: 0.5rem 1rem;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s ease;
-    border-radius: 4px;
+    border-radius: 0.35rem;
 }
 
     .user-dropdown:hover {
-        color: var(--primary-color);
-        background-color: rgba(78, 115, 223, 0.1);
+        background-color: rgba(67, 97, 238, 0.1);
     }
 
     .user-dropdown i {
@@ -433,37 +452,17 @@ body {
         color: var(--primary-color);
     }
 
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-    min-width: 200px;
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    object-fit: cover;
+    border: 2px solid rgba(67, 97, 238, 0.2);
 }
 
-.dropdown-item {
-    padding: 0.5rem 1.5rem;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-        color: var(--primary-color);
-    }
-
-    .dropdown-item i {
-        width: 20px;
-        text-align: center;
-        margin-right: 0.75rem;
-        color: var(--primary-color);
-    }
-
-.dropdown-divider {
-    border-color: #e9ecef;
-}
-
-/* Make username visible on all screens */
-.d-none.d-lg-inline {
-    display: inline !important;
+/* Active state for dropdown parent */
+.nav-item.dropdown.show .nav-link {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white !important;
 }

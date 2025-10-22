@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class InventoryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -120,6 +120,9 @@ namespace Rospand_IMS.Controllers
 
             return View(transactions);
         }
+
+       
+
         [HttpGet]
         public async Task<IActionResult> LowStock(int? threshold)
         {
@@ -134,6 +137,9 @@ namespace Rospand_IMS.Controllers
             ViewBag.Threshold = lowStockThreshold;
             return View(inventory);
         }
+
+                 
+
         [HttpGet]
         public async Task<IActionResult> Adjust()
         {

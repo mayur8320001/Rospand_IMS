@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class SalesOrderController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -581,7 +581,7 @@ namespace Rospand_IMS.Controllers
                 OutwardEntryId = outwardEntry.Id,
                 OutwardNumber = outwardEntry.OutwardNumber,
                 DeliveryDate = outwardEntry.DeliveryDate ?? DateTime.Today,
-              //  DeliveredBy = User.Identity?.Name // Or get from your user system
+              //  DeliveredBy = "System" // Or get from your user system
             };
 
             return View(viewModel);
@@ -781,10 +781,11 @@ namespace Rospand_IMS.Controllers
                 .Include(so => so.Items)
                     .ThenInclude(i => i.Product)
                 .Include(so => so.OutwardEntries)
+                    .ThenInclude(oe => oe.Warehouse)
+                .Include(so => so.OutwardEntries)
                     .ThenInclude(oe => oe.Items)
                         .ThenInclude(oi => oi.Product)
-                .Include(so => so.OutwardEntries)
-                    .ThenInclude(oe => oe.Warehouse)
+                .AsSplitQuery() // Helps with performance for complex queries
                 .FirstOrDefaultAsync(so => so.Id == id);
 
             if (salesOrder == null)

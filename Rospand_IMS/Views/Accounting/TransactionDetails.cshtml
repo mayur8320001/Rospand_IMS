@@ -1,0 +1,71 @@
+@model Rospand_IMS.Models.Account.Transaction
+
+@{
+    ViewData["Title"] = "Transaction Details";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Transaction Details</h1>
+        <a asp-action="Transactions" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Transactions
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Transaction Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Ledger</dt>
+                        <dd class="col-sm-8">@Model.Ledger?.LedgerName</dd>
+
+                        <dt class="col-sm-4">Amount</dt>
+                        <dd class="col-sm-8">@Model.Amount.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Type</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsDebit)
+                            {
+                                <span class="badge bg-danger">Debit</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Credit</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Narration</dt>
+                        <dd class="col-sm-8">@Model.Narration</dd>
+
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8">@Model.TransactionDate.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Ledger Balance</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Opening Balance</dt>
+                        <dd class="col-sm-8">@Model.Ledger?.OpeningBalance.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Current Balance</dt>
+                        <dd class="col-sm-8">@Model.Ledger?.CurrentBalance.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Ledger Type</dt>
+                        <dd class="col-sm-8">@Model.Ledger?.LedgerType</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

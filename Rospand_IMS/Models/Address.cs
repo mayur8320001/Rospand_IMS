@@ -19,6 +19,9 @@ public class Address
     public State? State { get; set; }
     public City? City { get; set; }
 
-    public ICollection<Vendor> BillingVendors { get; set; }
-    public ICollection<Vendor> ShippingVendors { get; set; }
+    public ICollection<Vendor> BillingVendors { get; set; } = new List<Vendor>();
+    public ICollection<Vendor> ShippingVendors { get; set; } = new List<Vendor>();
+    public ICollection<Customer> BillingCustomers { get; set; } = new List<Customer>();
+    public ICollection<Customer> ShippingCustomers { get; set; } = new List<Customer>();
+
 }

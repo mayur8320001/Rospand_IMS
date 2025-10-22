@@ -69,9 +69,7 @@
                             <td>@transaction.TransactionDate.ToString("g")</td>
                             <td>@transaction.TransactionType</td>
                             <td class="@(transaction.Quantity > 0 ? "text-success" : "text-danger")">
-                                @(transaction.TransactionType.ToString().Contains("Out") ||
-                                    transaction.TransactionType == InventoryTransactionType.Sale ?
-                                    "-" + transaction.Quantity : "+" + transaction.Quantity)
+                                @(transaction.Quantity > 0 ? "+" : "")@transaction.Quantity
                             </td>
                             <td>@transaction.ReferenceNumber</td>
                             <td>@transaction.Notes</td>

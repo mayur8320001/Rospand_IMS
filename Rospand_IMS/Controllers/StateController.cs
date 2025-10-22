@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
+
     public class StateController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -136,6 +137,56 @@ namespace Rospand_IMS.Controllers
 
             return View(state);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadStates(IFormFile excelFile)
+        {
+            if (excelFile == null || excelFile.Length <= 0)
+                return BadRequest("Invalid file.");
+
+            if (!Path.GetExtension(excelFile.FileName).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("Not a valid Excel file.");
+
+            using var stream = new MemoryStream();
+            await excelFile.CopyToAsync(stream);
+            using var package = new ExcelPackage(stream);
+
+            var worksheet = package.Workbook.Worksheets[0]; // First sheet
+            var rowCount = worksheet.Dimension.Rows;
+
+            for (int row = 2; row <= rowCount; row++) // Skipping header row
+            {
+                var stateId = worksheet.Cells[row, 3].Text?.Trim();  // Column 3 is StateId
+                var name = worksheet.Cells[row, 1].Text?.Trim();      // Column 1 is Name
+                var countryIdStr = worksheet.Cells[row, 2].Text?.Trim(); // Column 2 is CountryId
+
+                if (string.IsNullOrEmpty(stateId) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(countryIdStr))
+                    continue;
+
+                if (!int.TryParse(countryIdStr, out int countryId))
+                    continue;
+
+                // Check if already exists in DB
+                bool exists = _context.States.Any(s => s.StateId == stateId && s.CountryId == countryId);
+
+                if (exists)
+                    continue; // Skip if already exists
+
+                var state = new State
+                {
+                    Name = name,
+                    CountryId = countryId,
+                    StateId = stateId
+                };
+
+                _context.States.Add(state);
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("States uploaded successfully.");
+        }
+
+
 
         // POST: State/Delete/5
         [HttpPost, ActionName("Delete")]

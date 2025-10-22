@@ -1,15 +1,12 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
+using Rospand_IMS.Pagination;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
     public class CityController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,10 +17,49 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: City
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? pageNumber)
         {
-            var cities = _context.Cities.Include(c => c.State);
-            return View(await cities.ToListAsync());
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["StateSortParm"] = sortOrder == "State" ? "state_desc" : "State";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var cities = from c in _context.Cities.Include(c => c.State)
+                         select c;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                cities = cities.Where(c => c.Name.Contains(searchString));
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    cities = cities.OrderByDescending(c => c.Name);
+                    break;
+                case "State":
+                    cities = cities.OrderBy(c => c.State.Name);
+                    break;
+                case "state_desc":
+                    cities = cities.OrderByDescending(c => c.State.Name);
+                    break;
+                default:
+                    cities = cities.OrderBy(c => c.Name);
+                    break;
+            }
+
+            int pageSize = 10;
+            return View(await PaginatedList<City>.CreateAsync(cities.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: City/Details/5

@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rospand_IMS.Data;
 using Rospand_IMS.Models;
-using System.Linq;
-using System.Threading.Tasks;
+using Rospand_IMS.Pagination;
 
 namespace Rospand_IMS.Controllers
 {
-    [Authorize]
     public class CountryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,9 +16,50 @@ namespace Rospand_IMS.Controllers
         }
 
         // GET: Country
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? pageNumber)
         {
-            return View(await _context.Countries.ToListAsync());
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["CodeSortParm"] = sortOrder == "Code" ? "code_desc" : "Code";
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            var countries = from c in _context.Countries
+                            select c;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                countries = countries.Where(c => c.Name.Contains(searchString)
+                                       || c.Code.Contains(searchString));
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    countries = countries.OrderByDescending(c => c.Name);
+                    break;
+                case "Code":
+                    countries = countries.OrderBy(c => c.Code);
+                    break;
+                case "code_desc":
+                    countries = countries.OrderByDescending(c => c.Code);
+                    break;
+                default:
+                    countries = countries.OrderBy(c => c.Name);
+                    break;
+            }
+
+            int pageSize = 10;
+            return View(await PaginatedList<Country>.CreateAsync(countries.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Country/Details/5
@@ -51,7 +89,7 @@ namespace Rospand_IMS.Controllers
         // POST: Country/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Country country)
+        public async Task<IActionResult> Create([Bind("Id,Name,Code")] Country country)
         {
             if (ModelState.IsValid)
             {
@@ -81,7 +119,7 @@ namespace Rospand_IMS.Controllers
         // POST: Country/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Country country)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Code")] Country country)
         {
             if (id != country.Id)
             {

@@ -3,10 +3,14 @@
 @{
     ViewData["Title"] = "States";
 }
-
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5>States</h5>
+        <form asp-action="UploadStates" enctype="multipart/form-data" method="post">
+            <input type="file" name="excelFile" accept=".xlsx" />
+            <button type="submit">Upload States</button>
+        </form>
+
         <a asp-action="Create" class="btn btn-primary btn-sm">Create New</a>
     </div>
     <div class="card-body">

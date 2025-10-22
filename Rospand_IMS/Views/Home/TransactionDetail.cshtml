@@ -1,0 +1,141 @@
+﻿@model Rospand_IMS.Models.InventoryTransaction
+
+@{
+    ViewData["Title"] = "Transaction Details";
+    var relatedTransaction = ViewBag.RelatedTransaction as Rospand_IMS.Models.InventoryTransaction;
+}
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>@ViewData["Title"]</h4>
+                <a asp-action="TransactionDetails" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Transaction ID:</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+
+                        <dt class="col-sm-4">Date:</dt>
+                        <dd class="col-sm-8">@Model.TransactionDate.ToString("g")</dd>
+
+                        <dt class="col-sm-4">Type:</dt>
+                        <dd class="col-sm-8">
+                            @switch (Model.TransactionType)
+                            {
+                                case InventoryTransactionType.Purchase:
+                                    <span class="badge bg-primary">Purchase</span>
+                                    break;
+                                case InventoryTransactionType.Sale:
+                                    <span class="badge bg-success">Sale</span>
+                                    break;
+                                case InventoryTransactionType.Adjustment:
+                                    <span class="badge bg-warning">Adjustment</span>
+                                    break;
+                                case InventoryTransactionType.Damage:
+                                    <span class="badge bg-danger">Damage</span>
+                                    break;
+                                case InventoryTransactionType.TransferIn:
+                                    <span class="badge bg-info">Transfer In</span>
+                                    break;
+                                case InventoryTransactionType.TransferOut:
+                                    <span class="badge bg-info">Transfer Out</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.TransactionType</span>
+                                    break;
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Reference:</dt>
+                        <dd class="col-sm-8">@Model.ReferenceNumber</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Product:</dt>
+                        <dd class="col-sm-8">
+                            <a asp-controller="Inventory" asp-action="Details"
+                               asp-route-productId="@Model.ProductId"
+                               asp-route-warehouseId="@Model.WarehouseId">
+                                @Model.Product?.Name
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Warehouse:</dt>
+                        <dd class="col-sm-8">@Model.Warehouse?.Name</dd>
+
+                        <dt class="col-sm-4">Quantity:</dt>
+                        <dd class="col-sm-8 @(Model.Quantity > 0 ? "text-success" : "text-danger")">
+                            @(Model.Quantity > 0 ? "+" : "")@Model.Quantity
+                        </dd>
+
+                        <dt class="col-sm-4">Value:</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var value = Model.Quantity * (Model.TransactionType == InventoryTransactionType.Purchase ?
+                                Model.Product?.PurchasePrice ?? 0 : Model.Product?.SalesPrice ?? 0);
+                            }
+                            @value.ToString("C")
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h5>Notes</h5>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                @Model.Notes
+                            }
+                            else
+                            {
+                                <span class="text-muted">No notes available for this transaction.</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.TransactionType == InventoryTransactionType.TransferIn ||
+                        Model.TransactionType == InventoryTransactionType.TransferOut)
+            {
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5>Transfer Details</h5>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                @if (relatedTransaction != null)
+                                {
+                                    <p>
+                                        This transfer was @(Model.TransactionType == InventoryTransactionType.TransferIn ?
+                                                                        "received from" : "sent to")
+                                <strong>@relatedTransaction.Warehouse?.Name</strong> on
+                                @relatedTransaction.TransactionDate.ToString("g").
+                            </p>
+                            <a asp-action="TransactionDetails" asp-route-id="@relatedTransaction.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                View Related Transfer
+                            </a>
+                                                        }
+                                else
+                                {
+                                    <p class="text-muted">No related transfer information found.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

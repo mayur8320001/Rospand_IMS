@@ -1,0 +1,91 @@
+@model Rospand_IMS.Models.Account.Ledger
+
+@{
+    ViewData["Title"] = "Ledger Details";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Ledger Details</h1>
+        <a asp-action="Ledgers" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Ledgers
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Ledger Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">@Model.LedgerName</dd>
+
+                        <dt class="col-sm-4">Type</dt>
+                        <dd class="col-sm-8">@Model.LedgerType</dd>
+
+                        <dt class="col-sm-4">Opening Balance</dt>
+                        <dd class="col-sm-8">@Model.OpeningBalance.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Current Balance</dt>
+                        <dd class="col-sm-8">@Model.CurrentBalance.ToString("C")</dd>
+
+                        <dt class="col-sm-4">Created Date</dt>
+                        <dd class="col-sm-8">@Model.CreatedDate.ToString("dd/MM/yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.LedgerTransactions.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Narration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in Model.LedgerTransactions.OrderByDescending(t => t.TransactionDate))
+                                    {
+                                        <tr>
+                                            <td>@transaction.TransactionDate.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                @if (transaction.IsDebit)
+                                                {
+                                                    <span class="badge bg-danger">Debit</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Credit</span>
+                                                }
+                                            </td>
+                                            <td>@transaction.Amount.ToString("C")</td>
+                                            <td>@transaction.Narration</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No transactions found for this ledger.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
